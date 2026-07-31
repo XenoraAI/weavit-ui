@@ -4,8 +4,32 @@
 Browse collections, view/edit/delete/insert objects, and run vector, keyword, and hybrid
 searches — against **any** Weaviate instance (local, self-hosted, or Weaviate Cloud).
 
+[![Latest release](https://img.shields.io/github/v/release/XenoraAI/weavit-ui?sort=semver&label=download)](https://github.com/XenoraAI/weavit-ui/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/XenoraAI/weavit-ui/total)](https://github.com/XenoraAI/weavit-ui/releases)
+[![CI](https://github.com/XenoraAI/weavit-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/XenoraAI/weavit-ui/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/XenoraAI/weavit-ui)](./LICENSE)
+
 > ⚠️ **Community project — not affiliated with or endorsed by Weaviate B.V.**
 > “Weaviate” is a trademark of its respective owner. Weavit UI is an independent, open-source tool.
+
+---
+
+## Download
+
+### ⬇️ [Download the latest release](https://github.com/XenoraAI/weavit-ui/releases/latest)
+
+Pick the installer for your platform from the release assets:
+
+| Platform | Installer |
+| --- | --- |
+| **macOS** — Apple Silicon (M1/M2/M3…) | the `-arm64.dmg` file |
+| **macOS** — Intel | the `-x64.dmg` file |
+| **Windows** | the `-setup.exe` file (NSIS installer) |
+| **Linux** | the `.AppImage` (portable) or `.deb` (Debian/Ubuntu) file |
+
+> These are **unsigned community builds**, so on first launch your OS may warn about an
+> unidentified developer. On macOS, right-click the app → **Open**; on Windows, click
+> **More info → Run anyway**.
 
 ---
 
