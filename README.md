@@ -14,6 +14,16 @@ searches — against **any** Weaviate instance (local, self-hosted, or Weaviate 
 
 ---
 
+## Screenshots
+
+![Weavit UI — collections and data browser](docs/screenshots/1.png)
+
+![Weavit UI — search](docs/screenshots/2.png)
+
+![Weavit UI — admin & console](docs/screenshots/3.png)
+
+---
+
 ## Download
 
 ### ⬇️ [Download the latest release](https://github.com/XenoraAI/weavit-ui/releases/latest)
