@@ -10,7 +10,7 @@ release and the `main` branch only.
 **Please do not report security vulnerabilities through public GitHub issues.**
 
 Instead, report them privately through GitHub's
-[private vulnerability reporting](https://github.com/weavit-ui/weavit-ui/security/advisories/new)
+[private vulnerability reporting](https://github.com/XenoraAI/weavit-ui/security/advisories/new)
 ("Report a vulnerability" under the repository's **Security** tab).
 
 Please include:

@@ -17,5 +17,5 @@ All notable changes to Weavit UI are documented here. The format is based on
   - `nearText`, `nearVector`, BM25, and hybrid search with a visual filter builder
   - Admin views (cluster meta, modules, node status) and a raw GraphQL/REST console
 
-[Unreleased]: https://github.com/weavit-ui/weavit-ui/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/weavit-ui/weavit-ui/releases/tag/v0.1.0
+[Unreleased]: https://github.com/XenoraAI/weavit-ui/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/XenoraAI/weavit-ui/releases/tag/v0.1.0

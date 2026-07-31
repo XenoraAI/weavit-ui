@@ -7,7 +7,7 @@ By participating you agree to abide by our [Code of Conduct](./CODE_OF_CONDUCT.m
 
 ## Ways to contribute
 
-- **Report a bug** or **request a feature** via the [issue tracker](https://github.com/weavit-ui/weavit-ui/issues).
+- **Report a bug** or **request a feature** via the [issue tracker](https://github.com/XenoraAI/weavit-ui/issues).
 - **Improve the docs** — even fixing a typo in the README is a valuable PR.
 - **Send code** — pick up an open issue (comment first so we don't duplicate work) or discuss a
   larger change in an issue before you start.

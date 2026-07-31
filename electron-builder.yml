@@ -5,7 +5,7 @@ copyright: Copyright © Weavit UI contributors
 # draft GitHub Release keyed on the pushed tag; a maintainer publishes it.
 publish:
   provider: github
-  owner: weavit-ui
+  owner: XenoraAI
   repo: weavit-ui
   releaseType: draft
 directories:

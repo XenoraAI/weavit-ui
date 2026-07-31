@@ -7,13 +7,13 @@
   "license": "Apache-2.0",
   "type": "commonjs",
   "main": "./out/main/index.js",
-  "homepage": "https://github.com/weavit-ui/weavit-ui",
+  "homepage": "https://github.com/XenoraAI/weavit-ui",
   "repository": {
     "type": "git",
-    "url": "https://github.com/weavit-ui/weavit-ui.git"
+    "url": "https://github.com/XenoraAI/weavit-ui.git"
   },
   "bugs": {
-    "url": "https://github.com/weavit-ui/weavit-ui/issues"
+    "url": "https://github.com/XenoraAI/weavit-ui/issues"
   },
   "keywords": [
     "weaviate",

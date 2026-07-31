@@ -81,8 +81,8 @@ src/shared/     IPC contract types + channel names (shared by main & renderer)
 Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) to get set up, and please read
 our [Code of Conduct](./CODE_OF_CONDUCT.md). Found a security issue? See [SECURITY.md](./SECURITY.md).
 
-- 🐛 [Report a bug](https://github.com/weavit-ui/weavit-ui/issues/new?template=bug_report.yml)
-- 💡 [Request a feature](https://github.com/weavit-ui/weavit-ui/issues/new?template=feature_request.yml)
+- 🐛 [Report a bug](https://github.com/XenoraAI/weavit-ui/issues/new?template=bug_report.yml)
+- 💡 [Request a feature](https://github.com/XenoraAI/weavit-ui/issues/new?template=feature_request.yml)
 - 📦 Cutting a release? See [RELEASING.md](./RELEASING.md).
 
 ## License

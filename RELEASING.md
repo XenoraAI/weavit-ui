@@ -30,7 +30,7 @@ hand.
    **draft** GitHub Release for the tag and uploads its installers there.
 
 4. **Review and publish.** Open the drafted release under
-   [Releases](https://github.com/weavit-ui/weavit-ui/releases), confirm all installers are
+   [Releases](https://github.com/XenoraAI/weavit-ui/releases), confirm all installers are
    attached, write the changelog, and click **Publish release**.
 
 ## Testing packaging without releasing
