@@ -1,0 +1,75 @@
+{
+  "name": "weavit-ui",
+  "productName": "Weavit UI",
+  "version": "0.1.0",
+  "description": "Weavit UI — a cross-platform desktop GUI for the Weaviate vector database. Community project, not affiliated with Weaviate B.V.",
+  "author": "Weavit UI contributors",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "main": "./out/main/index.js",
+  "homepage": "https://github.com/weavit-ui/weavit-ui",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/weavit-ui/weavit-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/weavit-ui/weavit-ui/issues"
+  },
+  "keywords": [
+    "weaviate",
+    "vector-database",
+    "vector-search",
+    "gui",
+    "desktop",
+    "electron",
+    "database-client"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "build": "npm run typecheck && electron-vite build",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "test": "vitest run",
+    "pack:dir": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac --x64 --arm64",
+    "dist:win": "npm run build && electron-builder --win --x64",
+    "dist:linux": "npm run build && electron-builder --linux --x64"
+  },
+  "dependencies": {
+    "weaviate-client": "^3.14.0"
+  },
+  "devDependencies": {
+    "@codemirror/lang-json": "^6.0.1",
+    "@mantine/core": "^7.15.2",
+    "@mantine/hooks": "^7.15.2",
+    "@mantine/notifications": "^7.15.2",
+    "@mantine/spotlight": "^7.15.2",
+    "@tabler/icons-react": "^3.26.0",
+    "@tanstack/react-query": "^5.62.11",
+    "@tanstack/react-table": "^8.20.6",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@uiw/react-codemirror": "^4.23.7",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^37.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.1.0",
+    "postcss": "^8.4.49",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8",
+    "zod": "^3.24.1",
+    "zustand": "^5.0.2"
+  }
+}

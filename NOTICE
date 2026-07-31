@@ -1,0 +1,12 @@
+Weavit UI
+Copyright the Weavit UI contributors.
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Weavit UI is a community, open-source project. It is NOT affiliated with,
+sponsored by, or endorsed by Weaviate B.V. "Weaviate" and related marks are
+trademarks of their respective owner and are used here only nominatively to
+describe interoperability. Weavit UI bundles no Weaviate logos or brand assets.
+
+Weavit UI uses the official Weaviate client library (weaviate-client), which is
+distributed under its own license by its authors.

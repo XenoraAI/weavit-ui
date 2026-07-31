@@ -1,0 +1,54 @@
+name: Bug report
+description: Report something that isn't working as expected
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug! Please search existing issues first to avoid duplicates.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+      placeholder: When I click X, the app does Y, but I expected Z.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a connection to ...
+        2. Go to ...
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Weavit UI version
+      placeholder: e.g. 0.1.0 (see Help / About, or the release you downloaded)
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple Silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: weaviate-version
+    attributes:
+      label: Weaviate version / hosting
+      placeholder: e.g. 1.28.2 self-hosted, or Weaviate Cloud
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Any relevant error output or screenshots. Please redact API keys and hostnames.

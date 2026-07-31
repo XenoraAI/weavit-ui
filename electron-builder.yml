@@ -1,0 +1,41 @@
+appId: app.weavit.desktop
+productName: Weavit UI
+copyright: Copyright © Weavit UI contributors
+# Where `electron-builder --publish always` uploads the installers. It creates a
+# draft GitHub Release keyed on the pushed tag; a maintainer publishes it.
+publish:
+  provider: github
+  owner: weavit-ui
+  repo: weavit-ui
+  releaseType: draft
+directories:
+  buildResources: build
+  output: release/${version}
+files:
+  - out/**/*
+  - resources/**/*
+  - package.json
+# weaviate-client is an external runtime dependency; electron-builder packs
+# production deps from a hoisted node_modules automatically (see .npmrc).
+asarUnpack:
+  - "**/node_modules/weaviate-client/**"
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.developer-tools
+  artifactName: ${productName}-${version}-${arch}.${ext}
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  maintainer: Weavit UI contributors
+  artifactName: ${productName}-${version}-${arch}.${ext}
