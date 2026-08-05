@@ -1,8 +1,11 @@
-# Weavit UI
+# Weavit UI — a Weaviate GUI for macOS, Windows & Linux
 
-**A cross-platform desktop GUI for the [Weaviate](https://weaviate.io) vector database.**
-Browse collections, view/edit/delete/insert objects, and run vector, keyword, and hybrid
-searches — against **any** Weaviate instance (local, self-hosted, or Weaviate Cloud).
+**Weavit UI is a free, open-source Weaviate GUI: a cross-platform desktop client for the
+[Weaviate](https://weaviate.io) vector database.** Browse collections, view/edit/delete/insert
+objects, inspect named vectors, and run vector, keyword (BM25), and hybrid searches — against
+**any** Weaviate instance (local, self-hosted, or Weaviate Cloud).
+
+🌐 **[weavit-ui website →](https://xenoraai.github.io/weavit-ui/)**
 
 [![Latest release](https://img.shields.io/github/v/release/XenoraAI/weavit-ui?sort=semver&label=download)](https://github.com/XenoraAI/weavit-ui/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/XenoraAI/weavit-ui/total)](https://github.com/XenoraAI/weavit-ui/releases)
@@ -16,11 +19,11 @@ searches — against **any** Weaviate instance (local, self-hosted, or Weaviate 
 
 ## Screenshots
 
-![Weavit UI — collections and data browser](docs/screenshots/1.png)
+![Browsing a Weaviate collection in the Weavit UI GUI, with an object open on its Properties, JSON, Vectors and Metadata tabs](docs/screenshots/3.png)
 
-![Weavit UI — search](docs/screenshots/2.png)
+![The New connection dialog in Weavit UI, configuring a local Weaviate instance with host, HTTP port 8080 and gRPC port 50051](docs/screenshots/1.png)
 
-![Weavit UI — admin & console](docs/screenshots/3.png)
+![Weaviate cluster overview in Weavit UI showing version, collection and node counts, installed modules, and a GraphQL console](docs/screenshots/2.png)
 
 ---
 
@@ -118,6 +121,30 @@ our [Code of Conduct](./CODE_OF_CONDUCT.md). Found a security issue? See [SECURI
 - 🐛 [Report a bug](https://github.com/XenoraAI/weavit-ui/issues/new?template=bug_report.yml)
 - 💡 [Request a feature](https://github.com/XenoraAI/weavit-ui/issues/new?template=feature_request.yml)
 - 📦 Cutting a release? See [RELEASING.md](./RELEASING.md).
+
+## FAQ
+
+**Is there a GUI for Weaviate?**
+Yes — this one. Weavit UI is a free, open-source desktop GUI for Weaviate on macOS, Windows, and
+Linux. It connects to any instance and gives you a collection browser, an object editor, a vector
+inspector, and a search builder in one window.
+
+**How do I browse Weaviate collections?**
+Add a connection pointing at your Weaviate host, and every collection in the schema shows up in
+the sidebar. Selecting one opens a paginated object browser: read properties, switch to raw JSON,
+pick a tenant on multi-tenant collections, and open any object to see its named vectors.
+
+**Does it work with Weaviate Cloud?**
+Yes. Local, Weaviate Cloud, and fully custom setups with separate HTTP and gRPC hosts and ports
+all work, with API-key or anonymous auth.
+
+**Where are my API keys stored?**
+On your machine, encrypted at rest with your OS keychain via Electron `safeStorage`. No account,
+no sync, no telemetry.
+
+**Is this an official Weaviate product?**
+No — see the disclaimer at the top. Weavit UI is an independent community project built on the
+official [`weaviate-client`](https://www.npmjs.com/package/weaviate-client) library.
 
 ## License
 
