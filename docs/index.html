@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Weaviate GUI — Weavit UI, a free desktop client for Weaviate</title>
+<meta name="description" content="Weavit UI is a free, open-source Weaviate GUI for macOS, Windows and Linux. Browse collections, inspect vectors, and run vector, hybrid and BM25 searches.">
+<link rel="canonical" href="https://xenoraai.github.io/weavit-ui/">
+<meta name="theme-color" content="#0B0F12">
+
+<!-- Google Search Console: paste the google-site-verification meta tag here, then
+     verify the URL-prefix property for https://xenoraai.github.io/weavit-ui/ -->
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Weavit UI">
+<meta property="og:url" content="https://xenoraai.github.io/weavit-ui/">
+<meta property="og:title" content="Weaviate GUI — Weavit UI, a free desktop client for Weaviate">
+<meta property="og:description" content="Browse collections, inspect vectors, and run vector, hybrid and BM25 searches against any Weaviate instance. Free and open source for macOS, Windows and Linux.">
+<meta property="og:image" content="https://xenoraai.github.io/weavit-ui/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Weavit UI — a desktop GUI for the Weaviate vector database">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Weaviate GUI — Weavit UI, a free desktop client for Weaviate">
+<meta name="twitter:description" content="Browse collections, inspect vectors, and run vector, hybrid and BM25 searches against any Weaviate instance.">
+<meta name="twitter:image" content="https://xenoraai.github.io/weavit-ui/og.png">
+
+<link rel="icon" href="favicon.png" type="image/png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Weavit UI",
+      "alternateName": ["Weaviate GUI", "Weaviate Explorer", "Weaviate UI"],
+      "description": "A free, open-source cross-platform desktop GUI for the Weaviate vector database. Browse collections, view and edit objects, inspect named vectors, and run vector, keyword (BM25) and hybrid searches against any Weaviate instance.",
+      "applicationCategory": "DeveloperApplication",
+      "applicationSubCategory": "Database client",
+      "operatingSystem": "macOS, Windows, Linux",
+      "softwareVersion": "0.1.0",
+      "url": "https://xenoraai.github.io/weavit-ui/",
+      "downloadUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
+      "installUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
+      "license": "https://www.apache.org/licenses/LICENSE-2.0",
+      "isAccessibleForFree": true,
+      "screenshot": [
+        "https://xenoraai.github.io/weavit-ui/screenshots/1.png",
+        "https://xenoraai.github.io/weavit-ui/screenshots/2.png",
+        "https://xenoraai.github.io/weavit-ui/screenshots/3.png"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Weavit UI contributors",
+        "url": "https://github.com/XenoraAI/weavit-ui"
+      },
+      "codeRepository": "https://github.com/XenoraAI/weavit-ui",
+      "programmingLanguage": "TypeScript"
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is there a GUI for Weaviate?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Weavit UI is a free, open-source desktop GUI for Weaviate that runs on macOS, Windows and Linux. It connects to any Weaviate instance — local Docker, self-hosted, or Weaviate Cloud — and lets you browse collections, read and edit objects, inspect vectors, and run searches without writing GraphQL by hand."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I browse Weaviate collections?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Install Weavit UI, add a connection pointing at your Weaviate host, and every collection in the schema appears in the sidebar. Selecting one opens a paginated object browser where you can read properties, switch to raw JSON, page through results, pick a tenant on multi-tenant collections, and open any object to inspect its named vectors."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Weavit UI work with Weaviate Cloud?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Weavit UI supports local instances, Weaviate Cloud, and fully custom setups with separate HTTP and gRPC hosts and ports. Authentication can be an API key or anonymous, and you can add extra HTTP headers for third-party vectorizer keys such as OpenAI or Cohere."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Weavit UI free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Weavit UI is free and open source under the Apache-2.0 licence. There is no account, no telemetry, and no paid tier. Your connection credentials stay on your machine."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Where are my Weaviate API keys stored?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Credentials are encrypted at rest using your operating system's keychain via Electron safeStorage. The renderer process never talks to Weaviate directly — all database access goes through a typed IPC bridge in the main process, with context isolation on, node integration off, and sandboxing enabled."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Weavit UI an official Weaviate product?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Weavit UI is an independent community project and is not affiliated with, endorsed by, or sponsored by Weaviate B.V. Weaviate is a trademark of its respective owner."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box}
+
+:root{
+  /* Lifted from the app's own chrome */
+  --void:#0B0F12;
+  --panel:#12181D;
+  --inset:#171F25;
+  --line:#222D35;
+  --line-soft:#1A232A;
+  --mint:#3DDC97;
+  --mint-deep:#1C6B4C;
+  --indigo:#7C8CF8;
+  --ink:#E4EDF2;
+  --mute:#7C8E9B;
+  --faint:#55656F;
+
+  --mono:ui-monospace,SFMono-Regular,"SF Mono","JetBrains Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+
+  --wrap:1140px;
+  --bar:34px;
+}
+
+html{-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  padding-bottom:var(--bar);
+  background:var(--void);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+
+.wrap{width:100%;max-width:var(--wrap);margin:0 auto;padding:0 28px}
+
+a{color:var(--mint);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--mint);outline-offset:3px;border-radius:2px}
+
+img{max-width:100%;height:auto;display:block}
+
+/* ---- structural type: mono carries the labels, sans carries the prose ---- */
+.eyebrow{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--faint);
+  margin:0 0 18px;
+}
+.eyebrow .on{color:var(--mint)}
+
+.h2{
+  font-family:var(--mono);
+  font-size:clamp(24px,3.4vw,34px);
+  font-weight:700;
+  letter-spacing:-.02em;
+  margin:0 0 14px;
+  color:var(--ink);
+}
+
+.lede{color:var(--mute);max-width:62ch;margin:0}
+
+/* ---------------- nav ---------------- */
+.nav{border-bottom:1px solid var(--line-soft);position:relative;z-index:2}
+.nav-in{display:flex;align-items:center;gap:14px;height:62px}
+.mark{
+  font-family:var(--mono);font-size:13px;font-weight:700;color:var(--mint);
+  border:1px solid var(--mint-deep);border-radius:5px;padding:2px 7px;line-height:1.4;
+}
+.wordmark{font-family:var(--mono);font-weight:700;letter-spacing:-.02em;font-size:17px;color:var(--ink)}
+.nav-note{font-size:13px;color:var(--faint);margin-left:2px}
+.nav-sp{flex:1}
+.nav a.nav-link{color:var(--mute);font-size:14px}
+.nav a.nav-link:hover{color:var(--ink);text-decoration:none}
+
+/* ---------------- hero ---------------- */
+.hero{padding:84px 0 76px;border-bottom:1px solid var(--line-soft)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,460px);gap:64px;align-items:start}
+
+h1{
+  font-family:var(--mono);
+  font-size:clamp(42px,6.6vw,72px);
+  font-weight:700;
+  letter-spacing:-.045em;
+  line-height:1.02;
+  margin:0 0 22px;
+}
+h1 .qual{
+  display:block;
+  font-size:clamp(15px,1.7vw,19px);
+  font-weight:500;
+  letter-spacing:-.01em;
+  color:var(--mute);
+  margin-top:16px;
+  font-family:var(--sans);
+  line-height:1.5;
+}
+
+.hero p.intro{font-size:19px;color:var(--mute);max-width:54ch;margin:0 0 34px}
+.hero p.intro strong{color:var(--ink);font-weight:600}
+
+/* ---- download control ---- */
+.dl{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.btn{
+  display:inline-flex;flex-direction:column;gap:1px;
+  background:var(--mint);color:#04140D;
+  padding:13px 26px;border-radius:8px;
+  font-family:var(--mono);font-weight:700;font-size:16px;letter-spacing:-.01em;
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.btn:hover{text-decoration:none;transform:translateY(-1px);box-shadow:0 6px 22px -8px rgba(61,220,151,.6)}
+.btn .sub{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;opacity:.72}
+.alt{font-size:14px;color:var(--mute)}
+.alt a{color:var(--mute);text-decoration:underline;text-underline-offset:3px}
+.alt a:hover{color:var(--mint)}
+
+.meta-line{
+  margin:26px 0 0;font-family:var(--mono);font-size:12.5px;color:var(--faint);
+  letter-spacing:.04em;
+}
+
+/* ---- signature: the object card + embedding waveform ---- */
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  overflow:hidden;font-family:var(--mono);font-size:13px;
+}
+.card-head{
+  display:flex;align-items:center;gap:9px;
+  padding:11px 15px;border-bottom:1px solid var(--line);
+  background:var(--inset);color:var(--mute);font-size:12px;letter-spacing:.04em;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--mint);flex:none}
+.card-head .id{color:var(--faint);margin-left:auto;font-size:11.5px}
+
+.row{display:grid;grid-template-columns:88px minmax(0,1fr);gap:14px;padding:10px 15px;border-bottom:1px solid var(--line-soft)}
+.key{color:var(--mint);font-size:12.5px}
+.val{color:var(--ink);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.val.wrapok{white-space:normal;color:var(--mute);line-height:1.5}
+
+.vec{padding:16px 15px 15px}
+.vec-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:13px}
+.vec-name{color:var(--mint);font-size:12.5px}
+.vec-dim{color:var(--faint);font-size:11.5px;letter-spacing:.05em}
+
+.strip{display:flex;align-items:center;gap:3px;height:74px}
+.strip i{
+  flex:1;min-width:0;border-radius:1.5px;
+  height:calc(6px + var(--h) * 68px);
+  background:var(--mint);opacity:calc(.34 + var(--h) * .66);
+}
+.strip i.n{background:var(--indigo)}
+
+.vec-foot{
+  display:flex;justify-content:space-between;
+  margin-top:11px;color:var(--faint);font-size:11px;letter-spacing:.04em;
+}
+
+.cap{margin:14px 2px 0;font-size:13.5px;color:var(--faint);font-family:var(--sans);line-height:1.55}
+
+/* ---------------- sections ---------------- */
+.band{padding:88px 0;border-bottom:1px solid var(--line-soft)}
+.band-head{margin-bottom:44px}
+
+/* ---- screenshots ---- */
+.shots{display:grid;gap:44px}
+.shot img{border:1px solid var(--line);border-radius:10px;width:100%}
+.shot figcaption{margin-top:13px;font-size:14px;color:var(--mute)}
+.shot figcaption b{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
+figure{margin:0}
+
+/* ---- features ---- */
+/* Exactly 3 across so the six blocks fill two clean rows — auto-fit would
+   leave empty cells showing the grid's own background. */
+.feats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:10px;overflow:hidden}
+.feat{background:var(--void);padding:28px 26px 30px}
+.feat h3{
+  font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:-.01em;
+  margin:0 0 10px;color:var(--ink);
+}
+.feat .tag{
+  display:block;font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--mint);margin-bottom:13px;opacity:.85;
+}
+.feat p{margin:0;font-size:15px;color:var(--mute);line-height:1.6}
+
+/* ---- download table ---- */
+/* Table cells can't shrink below their min-content, so the table gets its own
+   scroll container rather than widening the page. */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl{width:100%;border-collapse:collapse;font-size:15px;margin-top:6px}
+.tbl th,.tbl td{text-align:left;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
+.tbl th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);font-weight:600;border-bottom-color:var(--line);
+}
+.tbl td:first-child{color:var(--ink)}
+.tbl td.file{font-family:var(--mono);font-size:13px;overflow-wrap:anywhere}
+.tbl tr.is-you td{background:rgba(61,220,151,.05)}
+.tbl tr.is-you td:first-child::after{
+  content:"your platform";margin-left:10px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--mint);
+}
+.note{
+  margin-top:26px;padding:16px 18px;border-left:2px solid var(--line);
+  color:var(--mute);font-size:14.5px;line-height:1.6;background:var(--panel);border-radius:0 7px 7px 0;
+}
+
+/* ---- faq ---- */
+.faq{display:grid;gap:34px;max-width:74ch}
+.faq h3{font-size:19px;font-weight:650;margin:0 0 9px;letter-spacing:-.01em;color:var(--ink)}
+.faq p{margin:0;color:var(--mute);font-size:16px}
+
+/* ---- footer ---- */
+.foot{padding:56px 0 64px;font-size:14.5px;color:var(--mute)}
+.foot .disc{
+  border:1px solid var(--line);border-radius:8px;padding:17px 19px;margin:0 0 26px;
+  color:var(--mute);font-size:14px;line-height:1.6;background:var(--panel);
+}
+.foot .disc b{color:var(--ink)}
+.foot-links{display:flex;flex-wrap:wrap;gap:22px;font-family:var(--mono);font-size:13px}
+
+/* ---- app-style status bar ---- */
+.statusbar{
+  position:fixed;left:0;right:0;bottom:0;height:var(--bar);z-index:20;
+  display:flex;align-items:center;gap:12px;
+  padding:0 16px;background:var(--panel);border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:11.5px;color:var(--faint);letter-spacing:.05em;
+}
+.statusbar .sb-you{color:var(--mint);display:flex;align-items:center;gap:7px}
+.statusbar .sb-sp{flex:1}
+.statusbar a{color:var(--faint)}
+.statusbar a:hover{color:var(--ink)}
+.sb-hide{display:none}
+
+/* ---- motion: one orchestrated moment, on the signature only ---- */
+@media (prefers-reduced-motion:no-preference){
+  .strip i{
+    animation:rise .5s cubic-bezier(.2,.7,.3,1) backwards;
+    animation-delay:calc(var(--i) * 11ms);
+    transform-origin:center;
+  }
+  @keyframes rise{from{transform:scaleY(.06);opacity:0}}
+}
+
+/* ---- responsive ---- */
+@media (max-width:900px){
+  .feats{grid-template-columns:repeat(2,1fr)}
+  .hero-grid{grid-template-columns:minmax(0,1fr);gap:46px}
+  .hero{padding:58px 0 54px}
+  .band{padding:64px 0}
+  body{font-size:16px}
+}
+@media (max-width:620px){
+  .feats{grid-template-columns:1fr}
+  .wrap{padding:0 20px}
+  .nav-note,.sb-mid,.nav-link.opt,.col-file{display:none}
+  .row{grid-template-columns:84px minmax(0,1fr);gap:10px}
+  .key{font-size:11.5px}
+  .tbl th,.tbl td{padding:11px 9px}
+  .tbl td.file{font-size:11.5px}
+  .btn{width:100%;align-items:center}
+}
+</style>
+</head>
+
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <span class="mark">[w]</span>
+    <span class="wordmark">Weavit UI</span>
+    <span class="nav-note">Weaviate desktop</span>
+    <span class="nav-sp"></span>
+    <a class="nav-link opt" href="#features">Features</a>
+    <a class="nav-link opt" href="#download">Download</a>
+    <a class="nav-link" href="https://github.com/XenoraAI/weavit-ui">GitHub</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+
+    <div>
+      <p class="eyebrow"><span class="on">●</span> weavit ui · v0.1.0 · apache-2.0</p>
+
+      <h1>Weaviate GUI
+        <span class="qual">A desktop client for the Weaviate vector database — macOS, Windows and Linux.</span>
+      </h1>
+
+      <p class="intro">Weavit UI connects to <strong>any Weaviate instance</strong> — local Docker,
+      self-hosted, or Weaviate Cloud — and gives you a real interface for it. Browse collections,
+      read and edit objects, inspect named vectors, and run vector, keyword and hybrid searches
+      without hand-writing GraphQL.</p>
+
+      <div class="dl">
+        <a class="btn" id="dl-main" href="https://github.com/XenoraAI/weavit-ui/releases/latest">
+          Download
+          <span class="sub" id="dl-sub">latest release</span>
+        </a>
+        <span class="alt" id="dl-alt">
+          <a href="#download">All platforms and installers</a>
+        </span>
+      </div>
+
+      <p class="meta-line">Free · open source · no account · no telemetry</p>
+    </div>
+
+    <!-- Signature: what a GUI is actually for — the embedding you normally can't read -->
+    <div>
+      <div class="card">
+        <div class="card-head">
+          <span class="dot"></span> SampleProducts
+          <span class="id">041226be-1647-4e98-862a</span>
+        </div>
+
+        <div class="row"><span class="key">name</span><span class="val">Kids' OluKai Pehuea Maka Slip-Ons</span></div>
+        <div class="row"><span class="key">description</span><span class="val wrapok">A colorful twist on the classic slip-on sneaker, these OluKai Kids' shoes double as slides.</span></div>
+        <div class="row"><span class="key">_distance</span><span class="val">0.1934</span></div>
+
+        <figure class="vec">
+          <div class="vec-top">
+            <span class="vec-name">default</span>
+            <span class="vec-dim">1536 dims · text2vec-weaviate</span>
+          </div>
+
+          <div class="strip" aria-hidden="true">
+            <i style="--h:.42;--i:0"></i><i class="n" style="--h:.66;--i:1"></i><i style="--h:.18;--i:2"></i>
+            <i style="--h:.81;--i:3"></i><i class="n" style="--h:.34;--i:4"></i><i style="--h:.55;--i:5"></i>
+            <i class="n" style="--h:.91;--i:6"></i><i style="--h:.27;--i:7"></i><i style="--h:.63;--i:8"></i>
+            <i class="n" style="--h:.12;--i:9"></i><i style="--h:.74;--i:10"></i><i style="--h:.38;--i:11"></i>
+            <i class="n" style="--h:.58;--i:12"></i><i class="n" style="--h:.22;--i:13"></i><i style="--h:.96;--i:14"></i>
+            <i style="--h:.45;--i:15"></i><i class="n" style="--h:.71;--i:16"></i><i style="--h:.31;--i:17"></i>
+            <i style="--h:.87;--i:18"></i><i class="n" style="--h:.49;--i:19"></i><i style="--h:.15;--i:20"></i>
+            <i style="--h:.68;--i:21"></i><i class="n" style="--h:.79;--i:22"></i><i style="--h:.36;--i:23"></i>
+            <i style="--h:.52;--i:24"></i><i class="n" style="--h:.94;--i:25"></i><i style="--h:.24;--i:26"></i>
+            <i class="n" style="--h:.61;--i:27"></i><i style="--h:.4;--i:28"></i><i style="--h:.83;--i:29"></i>
+            <i class="n" style="--h:.29;--i:30"></i><i style="--h:.57;--i:31"></i><i class="n" style="--h:.44;--i:32"></i>
+            <i style="--h:.76;--i:33"></i><i style="--h:.2;--i:34"></i><i class="n" style="--h:.65;--i:35"></i>
+            <i style="--h:.33;--i:36"></i><i class="n" style="--h:.88;--i:37"></i><i style="--h:.47;--i:38"></i>
+            <i style="--h:.26;--i:39"></i>
+          </div>
+
+          <div class="vec-foot"><span>0</span><span>first 40 components</span><span>1535</span></div>
+        </figure>
+      </div>
+
+      <p class="cap">Every object carries an embedding. Weavit UI shows it — alongside the
+      properties, the raw JSON, and the metadata — instead of leaving it as an opaque array
+      behind an API call.</p>
+    </div>
+
+  </div>
+</header>
+
+<section class="band" id="screenshots">
+  <div class="wrap">
+    <div class="band-head">
+      <p class="eyebrow">Screenshots</p>
+      <h2 class="h2">What the app looks like</h2>
+    </div>
+
+    <div class="shots">
+      <figure class="shot">
+        <img src="screenshots/3.png" width="2702" height="1700" loading="lazy" decoding="async"
+             alt="Browsing a Weaviate collection in the Weavit UI GUI, with an object detail drawer open on its Properties, JSON, Vectors and Metadata tabs">
+        <figcaption><b>data</b> — Page through a collection and open any object to read its
+        properties, raw JSON, named vectors, and metadata. Edit by merge or replace, or delete.</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/1.png" width="2712" height="1706" loading="lazy" decoding="async"
+             alt="The New connection dialog in Weavit UI, configuring a local Weaviate instance with host, HTTP port 8080 and gRPC port 50051">
+        <figcaption><b>connections</b> — Point it at localhost, Weaviate Cloud, or a fully custom
+        host with separate HTTP and gRPC endpoints. Colour-tag each environment so you always know
+        which instance you're on.</figcaption>
+      </figure>
+
+      <figure class="shot">
+        <img src="screenshots/2.png" width="2700" height="1708" loading="lazy" decoding="async"
+             alt="Weaviate cluster overview in Weavit UI showing server version, collection and node counts, installed vectorizer modules, and a GraphQL console">
+        <figcaption><b>admin</b> — Server version, node status, and every installed module at a
+        glance, plus a raw GraphQL and REST console for the queries no UI should try to abstract.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="features">
+  <div class="wrap">
+    <div class="band-head">
+      <p class="eyebrow">Features</p>
+      <h2 class="h2">A full Weaviate client, not a viewer</h2>
+      <p class="lede">Read and write. Weavit UI covers the day-to-day work of running a vector
+      database: inspecting what got ingested, fixing a bad object, and checking that a search
+      actually returns what you expect.</p>
+    </div>
+
+    <div class="feats">
+      <div class="feat">
+        <span class="tag">connections</span>
+        <h3>Connect to anything</h3>
+        <p>Local, Weaviate Cloud, or custom hosts with independent HTTP and gRPC endpoints.
+        API-key or anonymous auth, plus extra headers for third-party vectorizer keys. Credentials
+        are encrypted with your OS keychain.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">schema</span>
+        <h3>See the whole schema</h3>
+        <p>Every collection in a sidebar tree, with its properties, vectorizer, vector index
+        settings, and multi-tenancy config laid out. Create and delete collections without
+        writing a schema payload.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">data</span>
+        <h3>Read and edit objects</h3>
+        <p>A paginated object browser with structured and raw-JSON views, named vector display,
+        and a tenant selector. Insert new objects, patch existing ones by merge or replace, and
+        delete.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">query</span>
+        <h3>Search every way Weaviate can</h3>
+        <p>nearText, nearVector, BM25 keyword, and hybrid search — with a visual filter builder,
+        target-vector selection, and property projection. Tune a query and see results
+        immediately.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">admin</span>
+        <h3>Inspect the cluster</h3>
+        <p>Cluster metadata, installed modules, and per-node status. When you need to drop to the
+        wire, the built-in GraphQL and REST console sends raw requests to the same connection.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">architecture</span>
+        <h3>Locked down by default</h3>
+        <p>The UI never reaches Weaviate directly. All access goes through a typed IPC bridge in
+        the Electron main process, with context isolation on, node integration off, sandboxing
+        enabled, and a production CSP.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="download">
+  <div class="wrap">
+    <div class="band-head">
+      <p class="eyebrow">Download</p>
+      <h2 class="h2">Get Weavit UI 0.1.0</h2>
+      <p class="lede">Free and open source under Apache-2.0. Pick your platform, or browse every
+      asset on the <a href="https://github.com/XenoraAI/weavit-ui/releases/latest">GitHub releases
+      page</a>.</p>
+    </div>
+
+    <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr><th scope="col">Platform</th><th scope="col">Installer</th><th scope="col" class="col-file">File</th></tr>
+      </thead>
+      <tbody>
+        <tr id="p-mac-arm">
+          <td>macOS — Apple Silicon</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/Weavit-UI-0.1.0-arm64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-0.1.0-arm64.dmg</td>
+        </tr>
+        <tr id="p-mac-x64">
+          <td>macOS — Intel</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/Weavit-UI-0.1.0-x64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-0.1.0-x64.dmg</td>
+        </tr>
+        <tr id="p-win">
+          <td>Windows — x64</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/Weavit-UI-0.1.0-setup.exe">Download installer</a></td>
+          <td class="file col-file">Weavit-UI-0.1.0-setup.exe</td>
+        </tr>
+        <tr id="p-linux">
+          <td>Linux — portable</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/Weavit-UI-0.1.0-x86_64.AppImage">Download AppImage</a></td>
+          <td class="file col-file">Weavit-UI-0.1.0-x86_64.AppImage</td>
+        </tr>
+        <tr id="p-deb">
+          <td>Linux — Debian / Ubuntu</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/Weavit-UI-0.1.0-amd64.deb">Download .deb</a></td>
+          <td class="file col-file">Weavit-UI-0.1.0-amd64.deb</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <p class="note">These are unsigned community builds, so your OS will flag them on first launch.
+    On macOS, right-click the app and choose <b>Open</b>. On Windows, click <b>More info →
+    Run anyway</b>. Prefer to build it yourself? The source and build instructions are
+    <a href="https://github.com/XenoraAI/weavit-ui#build--package">on GitHub</a>.</p>
+  </div>
+</section>
+
+<section class="band" id="faq">
+  <div class="wrap">
+    <div class="band-head">
+      <p class="eyebrow">FAQ</p>
+      <h2 class="h2">Questions</h2>
+    </div>
+
+    <div class="faq">
+      <div>
+        <h3>Is there a GUI for Weaviate?</h3>
+        <p>Yes — Weavit UI. It's a free, open-source desktop GUI for Weaviate on macOS, Windows and
+        Linux. It connects to any instance, local or cloud, and gives you a collection browser, an
+        object editor, a vector inspector, and a search builder in one window.</p>
+      </div>
+
+      <div>
+        <h3>How do I browse Weaviate collections?</h3>
+        <p>Add a connection pointing at your Weaviate host, and every collection in the schema
+        appears in the sidebar. Selecting one opens a paginated object browser: read properties,
+        switch to raw JSON, pick a tenant on multi-tenant collections, and open any object to see
+        its named vectors and metadata.</p>
+      </div>
+
+      <div>
+        <h3>Does it work with Weaviate Cloud?</h3>
+        <p>Yes. Local instances, Weaviate Cloud, and fully custom setups with separate HTTP and
+        gRPC hosts and ports all work. Authenticate with an API key or anonymously, and add extra
+        HTTP headers when your vectorizer needs a third-party key such as OpenAI or Cohere.</p>
+      </div>
+
+      <div>
+        <h3>Where are my API keys stored?</h3>
+        <p>On your machine, encrypted at rest with your operating system's keychain through
+        Electron's <code>safeStorage</code>. Nothing is sent anywhere else — there's no account,
+        no sync, and no telemetry.</p>
+      </div>
+
+      <div>
+        <h3>What does it cost?</h3>
+        <p>Nothing. Weavit UI is Apache-2.0 licensed open source with no paid tier. Contributions
+        and bug reports are welcome on <a href="https://github.com/XenoraAI/weavit-ui">GitHub</a>.</p>
+      </div>
+
+      <div>
+        <h3>Is this an official Weaviate product?</h3>
+        <p>No. Weavit UI is an independent community project, not affiliated with, endorsed by, or
+        sponsored by Weaviate B.V. It's built on the official
+        <a href="https://www.npmjs.com/package/weaviate-client">weaviate-client</a> library, but
+        it isn't shipped or supported by them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <p class="disc"><b>Community project — not affiliated with or endorsed by Weaviate B.V.</b>
+    "Weaviate" is a trademark of its respective owner and is used here only to describe what this
+    tool connects to. Weavit UI is an independent, open-source client.</p>
+
+    <div class="foot-links">
+      <a href="https://github.com/XenoraAI/weavit-ui">Source</a>
+      <a href="https://github.com/XenoraAI/weavit-ui/releases">Releases</a>
+      <a href="https://github.com/XenoraAI/weavit-ui/issues/new?template=bug_report.yml">Report a bug</a>
+      <a href="https://github.com/XenoraAI/weavit-ui/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/XenoraAI/weavit-ui/blob/main/LICENSE">Apache-2.0</a>
+    </div>
+  </div>
+</footer>
+
+<div class="statusbar">
+  <span class="sb-you" id="sb-you"><span class="dot"></span> weavit-ui</span>
+  <span class="sb-mid">v0.1.0</span>
+  <span class="sb-sp"></span>
+  <span class="sb-mid">apache-2.0</span>
+  <a href="https://github.com/XenoraAI/weavit-ui">github</a>
+</div>
+
+<script>
+/* Progressive enhancement only: the page is complete and the download button already
+   works with JavaScript disabled. This just points it at the right installer. */
+(function () {
+  var BASE = 'https://github.com/XenoraAI/weavit-ui/releases/download/v0.1.0/';
+  var ua = navigator.userAgent || '';
+  var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+  var s = (plat + ' ' + ua).toLowerCase();
+
+  var target = null;
+
+  if (/mac|iphone|ipad/.test(s)) {
+    // Arch isn't reliably detectable from the browser, so default to Apple Silicon
+    // (every Mac since 2020) and surface the Intel build right next to it.
+    target = {
+      file: 'Weavit-UI-0.1.0-arm64.dmg',
+      label: 'Download for macOS',
+      sub: 'Apple Silicon · .dmg',
+      row: 'p-mac-arm',
+      status: 'macos · apple silicon',
+      alt: '<a href="' + BASE + 'Weavit-UI-0.1.0-x64.dmg">On an Intel Mac?</a> · <a href="#download">All platforms</a>'
+    };
+  } else if (/win/.test(s)) {
+    target = {
+      file: 'Weavit-UI-0.1.0-setup.exe',
+      label: 'Download for Windows',
+      sub: 'x64 · installer',
+      row: 'p-win',
+      status: 'windows · x64',
+      alt: '<a href="#download">All platforms</a>'
+    };
+  } else if (/linux|x11|cros/.test(s) && !/android/.test(s)) {
+    target = {
+      file: 'Weavit-UI-0.1.0-x86_64.AppImage',
+      label: 'Download for Linux',
+      sub: 'x86_64 · AppImage',
+      row: 'p-linux',
+      status: 'linux · x86_64',
+      alt: '<a href="' + BASE + 'Weavit-UI-0.1.0-amd64.deb">Debian / Ubuntu .deb</a> · <a href="#download">All platforms</a>'
+    };
+  }
+
+  if (!target) return; // leave the static /releases/latest fallback in place
+
+  var btn = document.getElementById('dl-main');
+  btn.href = BASE + target.file;
+  btn.childNodes[0].nodeValue = target.label + ' ';
+  document.getElementById('dl-sub').textContent = target.sub;
+  document.getElementById('dl-alt').innerHTML = target.alt;
+
+  var row = document.getElementById(target.row);
+  if (row) row.className = 'is-you';
+
+  var you = document.getElementById('sb-you');
+  you.innerHTML = '<span class="dot"></span> ' + target.status;
+})();
+</script>
+
+</body>
+</html>

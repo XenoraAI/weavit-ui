@@ -1,0 +1,9 @@
+# Note: crawlers only read robots.txt from a domain root, i.e.
+# https://xenoraai.github.io/robots.txt — which belongs to a different repo.
+# This file is documentation of intent; it is not what crawlers obey.
+# Nothing here blocks anything, and no robots.txt means "crawl everything".
+
+User-agent: *
+Allow: /
+
+Sitemap: https://xenoraai.github.io/weavit-ui/sitemap.xml
