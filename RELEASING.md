@@ -7,16 +7,26 @@ hand.
 ## How a release happens
 
 1. **Bump the version.** Update `"version"` in [`package.json`](./package.json) (follow
-   [semver](https://semver.org)) and merge it to `main`.
+   [semver](https://semver.org)), add the matching section to
+   [`CHANGELOG.md`](./CHANGELOG.md), and refresh the version strings in
+   [`docs/index.html`](./docs/index.html) — the eyebrow, the JSON-LD `softwareVersion`, the
+   download heading, the installer table and its JavaScript, and the status bar. Bump
+   `<lastmod>` in [`docs/sitemap.xml`](./docs/sitemap.xml) too.
 
-2. **Tag and push.** The tag must be `v` + the exact `package.json` version:
+2. **Merge it to `main`.** That's the whole trigger. On the merge, the
+   [`Release` workflow](./.github/workflows/release.yml) sees that no `v<version>` tag exists
+   yet, creates and pushes it, and starts the build. Merges that don't change the version are
+   a no-op — the tag is already there, so nothing is built.
+
+   You can still cut a release by hand if you prefer; pushing the tag yourself works exactly
+   as before and skips the auto-tag step:
 
    ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
+   git tag v1.0.0
+   git push origin v1.0.0
    ```
 
-3. **CI builds everything.** The [`Release` workflow](./.github/workflows/release.yml) fans out
+3. **CI builds everything.** The workflow fans out
    across three runners and, with [`electron-builder`](https://www.electron.build), produces:
 
    | Platform          | Runner           | Artifacts                              |

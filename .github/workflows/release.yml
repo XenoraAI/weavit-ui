@@ -1,27 +1,87 @@
 name: Release
 
-# Standard open-source Electron release flow:
-#   1. Bump the version in package.json and push a matching tag, e.g. `v0.1.0`.
-#   2. This workflow fans out across macOS / Windows / Linux runners and builds
-#      the installers with electron-builder.
-#   3. Each job runs `electron-builder --publish always`, which creates (or
+# Release flow:
+#   1. Bump `version` in package.json (e.g. 1.0.0) on a branch and merge it to main.
+#   2. On that merge, the `prepare` job notices there is no `v1.0.0` tag yet,
+#      creates and pushes it, and green-lights the build.
+#   3. `release` fans out across macOS / Windows / Linux runners and builds the
+#      installers with electron-builder.
+#   4. Each job runs `electron-builder --publish always`, which creates (or
 #      appends to) a single DRAFT GitHub Release keyed on the tag and uploads
 #      its installers there — mac x64 + arm64, Windows x64, Linux x64.
-#   4. A maintainer reviews the drafted release, writes the notes, and publishes.
+#   5. A maintainer reviews the drafted release, writes the notes, and publishes.
 #
+# Merges to main that DON'T change the version are a no-op: the tag already
+# exists, so `prepare` stops there and nothing is built.
+#
+# Pushing a `vX.Y.Z` tag by hand still works and releases that tag directly.
 # A manual `workflow_dispatch` run builds every installer but publishes nothing —
 # use it to smoke-test packaging on all platforms without cutting a release.
 
 on:
   push:
+    branches: [main]
     tags: ['v*']
   workflow_dispatch:
 
 permissions:
-  contents: write # required to create/update the GitHub Release
+  contents: write # required to push the version tag and create the GitHub Release
+
+# Never let two releases race each other onto the same tag.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.decide.outputs.publish }}
+      version: ${{ steps.decide.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need the tag list to know if this version already shipped
+
+      - name: Decide whether this commit is a release
+        id: decide
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          # A tag push is always a release of that tag.
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            echo "Tag push: releasing ${{ github.ref_name }}"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Manual runs build every installer but publish nothing.
+          if [ "${{ github.event_name }}" != "push" ]; then
+            echo "Manual run: building without publishing"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version already tagged — nothing to release."
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "New version on main: tagging v$version"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$version" -m "v$version"
+          git push origin "v$version"
+          echo "publish=true" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: prepare
+    # Skip entirely on a main push that didn't bump the version; a manual run
+    # still builds (without publishing) so packaging can be smoke-tested.
+    if: needs.prepare.outputs.publish == 'true' || github.event_name == 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -56,11 +116,11 @@ jobs:
         run: pnpm build
 
       - name: Package installers
-        # On a tag push -> publish to the draft GitHub Release.
-        # On a manual run -> build only, publish nothing.
+        # Releasing -> publish to the draft GitHub Release for the version tag.
+        # Manual run -> build only, publish nothing.
         run: >-
           pnpm exec electron-builder ${{ matrix.build_args }}
-          --publish ${{ startsWith(github.ref, 'refs/tags/v') && 'always' || 'never' }}
+          --publish ${{ needs.prepare.outputs.publish == 'true' && 'always' || 'never' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # This is an unsigned community build: don't let electron-builder try
