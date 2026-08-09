@@ -6,6 +6,21 @@ All notable changes to Weavit UI are documented here. The format is based on
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-09
+
+Packaging-only release. No application changes — if the macOS Apple Silicon build of
+v1.0.0 launched for you, there is nothing new here.
+
+### Fixed
+
+- **macOS builds no longer fail to launch on Apple Silicon.** The packaged app kept the
+  stock Electron binary's linker signature, which stopped matching the bundle once
+  electron-builder renamed it and swapped in our Info.plist and `app.asar`. Combined with
+  the download quarantine flag, arm64 macOS refused to start it — *"Weavit UI is damaged
+  and can't be opened."* Packaging now ad-hoc signs the app (`afterPack` hook) and fails
+  the build if the signature doesn't verify. The builds are still unnotarized, so first
+  launch still needs right-click → **Open**.
+
 ## [1.0.0] - 2026-08-09
 
 First stable release. Collections are now fully editable from the UI, not just
@@ -49,6 +64,7 @@ creatable and deletable.
   - `nearText`, `nearVector`, BM25, and hybrid search with a visual filter builder
   - Admin views (cluster meta, modules, node status) and a raw GraphQL/REST console
 
-[Unreleased]: https://github.com/XenoraAI/weavit-ui/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/XenoraAI/weavit-ui/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/XenoraAI/weavit-ui/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/XenoraAI/weavit-ui/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/XenoraAI/weavit-ui/releases/tag/v0.1.0

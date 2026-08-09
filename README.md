@@ -43,6 +43,15 @@ Pick the installer for your platform from the release assets:
 > These are **unsigned community builds**, so on first launch your OS may warn about an
 > unidentified developer. On macOS, right-click the app → **Open**; on Windows, click
 > **More info → Run anyway**.
+>
+> **macOS 1.0.0 only:** the Apple Silicon build in v1.0.0 shipped without a valid
+> signature, so macOS rejects it with *"Weavit UI is damaged and can't be opened."*
+> Upgrade to v1.0.1 or later. To use the 1.0.0 download you already have, repair it with:
+>
+> ```bash
+> codesign --force --deep --sign - "/Applications/Weavit UI.app"
+> xattr -dr com.apple.quarantine "/Applications/Weavit UI.app"
+> ```
 
 ---
 

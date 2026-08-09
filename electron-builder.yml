@@ -11,6 +11,11 @@ publish:
 directories:
   buildResources: build
   output: release/${version}
+# Ad-hoc signs macOS builds. Required: without it, Apple Silicon refuses to
+# launch the downloaded app with "is damaged and can't be opened". See the hook
+# for the full explanation. Must be `afterPack`, not `afterSign` — electron-builder
+# skips `afterSign` entirely when no signing identity is configured.
+afterPack: build/adhoc-sign-mac.cjs
 files:
   - out/**/*
   - resources/**/*
