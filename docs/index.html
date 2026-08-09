@@ -41,7 +41,7 @@
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "Database client",
       "operatingSystem": "macOS, Windows, Linux",
-      "softwareVersion": "1.0.0",
+      "softwareVersion": "1.0.1",
       "url": "https://xenoraai.github.io/weavit-ui/",
       "downloadUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
       "installUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
@@ -106,6 +106,14 @@
           "acceptedAnswer": {
             "@type": "Answer",
             "text": "Credentials are encrypted at rest using your operating system's keychain via Electron safeStorage. The renderer process never talks to Weaviate directly — all database access goes through a typed IPC bridge in the main process, with context isolation on, node integration off, and sandboxing enabled."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "macOS says Weavit UI is blocked or damaged. How do I open it?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Weavit UI is an unsigned community build, so macOS blocks it on first launch. Open the app once and dismiss the warning, then go to System Settings, Privacy & Security, scroll down to the Security section, click Open Anyway next to \"Weavit UI was blocked to protect your Mac\", and enter your Mac login password to confirm. The app opens and you will not be asked again. If you see \"Weavit UI is damaged and can't be opened\" instead, you have the v1.0.0 Apple Silicon build, which shipped without a valid signature — download v1.0.1 or later, which fixes it."
           }
         },
         {
@@ -335,6 +343,34 @@ figure{margin:0}
   color:var(--mute);font-size:14.5px;line-height:1.6;background:var(--panel);border-radius:0 7px 7px 0;
 }
 
+/* ---- first-launch callout (macOS gatekeeper) ---- */
+.gate{
+  margin-top:26px;border:1px solid var(--line);border-radius:11px;
+  background:var(--panel);overflow:hidden;
+}
+.gate-head{
+  display:flex;align-items:center;gap:9px;padding:13px 18px;
+  border-bottom:1px solid var(--line);background:var(--inset);
+  font-family:var(--mono);font-size:12px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--mint);
+}
+.gate-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;padding:20px 18px}
+.gate-body p{margin:0 0 14px;color:var(--mute);font-size:14.5px;line-height:1.6}
+.gate-body p:last-child{margin-bottom:0}
+.gate-body b{color:var(--ink);font-weight:600}
+.gate ol{margin:0 0 14px;padding-left:20px;color:var(--mute);font-size:14.5px;line-height:1.75}
+.gate ol li{margin-bottom:5px}
+.gate figure{margin:0}
+.gate figure img{width:100%;border:1px solid var(--line);border-radius:8px;display:block}
+.gate figcaption{margin-top:9px;color:var(--faint);font-size:12.5px;line-height:1.5}
+.gate .why{
+  margin-top:4px;padding-top:14px;border-top:1px solid var(--line-soft);
+  color:var(--faint);font-size:13.5px;
+}
+@media(max-width:820px){
+  .gate-body{grid-template-columns:1fr;gap:22px}
+}
+
 /* ---- faq ---- */
 .faq{display:grid;gap:34px;max-width:74ch}
 .faq h3{font-size:19px;font-weight:650;margin:0 0 9px;letter-spacing:-.01em;color:var(--ink)}
@@ -411,7 +447,7 @@ figure{margin:0}
   <div class="wrap hero-grid">
 
     <div>
-      <p class="eyebrow"><span class="on">●</span> weavit ui · v1.0.0 · apache-2.0</p>
+      <p class="eyebrow"><span class="on">●</span> weavit ui · v1.0.1 · apache-2.0</p>
 
       <h1>Weaviate GUI
         <span class="qual">A desktop client for the Weaviate vector database — macOS, Windows and Linux.</span>
@@ -580,7 +616,7 @@ figure{margin:0}
   <div class="wrap">
     <div class="band-head">
       <p class="eyebrow">Download</p>
-      <h2 class="h2">Get Weavit UI 1.0.0</h2>
+      <h2 class="h2">Get Weavit UI 1.0.1</h2>
       <p class="lede">Free and open source under Apache-2.0. Pick your platform, or browse every
       asset on the <a href="https://github.com/XenoraAI/weavit-ui/releases/latest">GitHub releases
       page</a>.</p>
@@ -594,36 +630,67 @@ figure{margin:0}
       <tbody>
         <tr id="p-mac-arm">
           <td>macOS — Apple Silicon</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/Weavit-UI-1.0.0-arm64.dmg">Download .dmg</a></td>
-          <td class="file col-file">Weavit-UI-1.0.0-arm64.dmg</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-arm64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-1.0.1-arm64.dmg</td>
         </tr>
         <tr id="p-mac-x64">
           <td>macOS — Intel</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/Weavit-UI-1.0.0-x64.dmg">Download .dmg</a></td>
-          <td class="file col-file">Weavit-UI-1.0.0-x64.dmg</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-x64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-1.0.1-x64.dmg</td>
         </tr>
         <tr id="p-win">
           <td>Windows — x64</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/Weavit-UI-1.0.0-setup.exe">Download installer</a></td>
-          <td class="file col-file">Weavit-UI-1.0.0-setup.exe</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-setup.exe">Download installer</a></td>
+          <td class="file col-file">Weavit-UI-1.0.1-setup.exe</td>
         </tr>
         <tr id="p-linux">
           <td>Linux — portable</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/Weavit-UI-1.0.0-x86_64.AppImage">Download AppImage</a></td>
-          <td class="file col-file">Weavit-UI-1.0.0-x86_64.AppImage</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-x86_64.AppImage">Download AppImage</a></td>
+          <td class="file col-file">Weavit-UI-1.0.1-x86_64.AppImage</td>
         </tr>
         <tr id="p-deb">
           <td>Linux — Debian / Ubuntu</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/Weavit-UI-1.0.0-amd64.deb">Download .deb</a></td>
-          <td class="file col-file">Weavit-UI-1.0.0-amd64.deb</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-amd64.deb">Download .deb</a></td>
+          <td class="file col-file">Weavit-UI-1.0.1-amd64.deb</td>
         </tr>
       </tbody>
     </table>
     </div>
 
-    <p class="note">These are unsigned community builds, so your OS will flag them on first launch.
-    On macOS, right-click the app and choose <b>Open</b>. On Windows, click <b>More info →
-    Run anyway</b>. Prefer to build it yourself? The source and build instructions are
+    <div class="gate" id="macos-first-launch">
+      <div class="gate-head"> First launch on macOS</div>
+      <div class="gate-body">
+        <div>
+          <p>Weavit UI is an unsigned community build — it isn't notarized by Apple, so macOS
+          blocks it the first time you open it. This is expected, and you only do this once.</p>
+          <ol>
+            <li>Open <b>Weavit UI</b> from Applications. macOS blocks it — click <b>Done</b>.</li>
+            <li>Go to <b>System Settings → Privacy &amp; Security</b>.</li>
+            <li>Scroll down to the <b>Security</b> section. You'll see
+            <i>“Weavit UI” was blocked to protect your Mac.</i></li>
+            <li>Click <b>Open Anyway</b>.</li>
+            <li>Enter your Mac login password (or Touch ID) to confirm.</li>
+          </ol>
+          <p>Weavit UI opens, and every launch after this one is normal — you won't be asked again.</p>
+          <p class="why">Why the warning? Notarizing an app requires a paid Apple Developer
+          account. Weavit UI is a free, open-source project, so the builds ship unsigned. Every
+          installer is built in public from this repo by
+          <a href="https://github.com/XenoraAI/weavit-ui/actions/workflows/release.yml">GitHub
+          Actions</a> — you can read the workflow, or
+          <a href="https://github.com/XenoraAI/weavit-ui#build--package">build it yourself</a>.</p>
+        </div>
+        <figure>
+          <img src="approve-app.png" width="1374" height="936" loading="lazy"
+               alt="macOS System Settings, Privacy &amp; Security pane, scrolled to the Security section. A row reads “Weavit UI” was blocked to protect your Mac, with an Open Anyway button beside it.">
+          <figcaption>System Settings → Privacy &amp; Security → Security → <b>Open Anyway</b>.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <p class="note"><b>Windows:</b> SmartScreen will flag the installer for the same reason —
+    click <b>More info → Run anyway</b>. <b>Linux:</b> no prompt; mark the AppImage executable
+    with <code>chmod +x</code> before running it. Prefer to build it yourself? The source and
+    build instructions are
     <a href="https://github.com/XenoraAI/weavit-ui#build--package">on GitHub</a>.</p>
   </div>
 </section>
@@ -666,6 +733,17 @@ figure{margin:0}
       </div>
 
       <div>
+        <h3>macOS says Weavit UI is blocked. How do I open it?</h3>
+        <p>That's Gatekeeper — the builds are unsigned, so macOS stops the first launch. Open the
+        app once and dismiss the warning, then go to <b>System Settings → Privacy &amp; Security</b>,
+        scroll down to <b>Security</b>, click <b>Open Anyway</b>, and enter your Mac login password.
+        You only do this once. <a href="#macos-first-launch">Full steps, with a screenshot</a>.</p>
+        <p>Seeing <i>“Weavit UI is damaged and can't be opened”</i> instead? That's the v1.0.0
+        Apple Silicon build, which shipped without a valid signature.
+        <a href="#download">Download v1.0.1 or later</a>, which fixes it.</p>
+      </div>
+
+      <div>
         <h3>What does it cost?</h3>
         <p>Nothing. Weavit UI is Apache-2.0 licensed open source with no paid tier. Contributions
         and bug reports are welcome on <a href="https://github.com/XenoraAI/weavit-ui">GitHub</a>.</p>
@@ -700,7 +778,7 @@ figure{margin:0}
 
 <div class="statusbar">
   <span class="sb-you" id="sb-you"><span class="dot"></span> weavit-ui</span>
-  <span class="sb-mid">v1.0.0</span>
+  <span class="sb-mid">v1.0.1</span>
   <span class="sb-sp"></span>
   <span class="sb-mid">apache-2.0</span>
   <a href="https://github.com/XenoraAI/weavit-ui">github</a>
@@ -710,7 +788,7 @@ figure{margin:0}
 /* Progressive enhancement only: the page is complete and the download button already
    works with JavaScript disabled. This just points it at the right installer. */
 (function () {
-  var BASE = 'https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.0/';
+  var BASE = 'https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/';
   var ua = navigator.userAgent || '';
   var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
   var s = (plat + ' ' + ua).toLowerCase();
@@ -721,16 +799,16 @@ figure{margin:0}
     // Arch isn't reliably detectable from the browser, so default to Apple Silicon
     // (every Mac since 2020) and surface the Intel build right next to it.
     target = {
-      file: 'Weavit-UI-1.0.0-arm64.dmg',
+      file: 'Weavit-UI-1.0.1-arm64.dmg',
       label: 'Download for macOS',
       sub: 'Apple Silicon · .dmg',
       row: 'p-mac-arm',
       status: 'macos · apple silicon',
-      alt: '<a href="' + BASE + 'Weavit-UI-1.0.0-x64.dmg">On an Intel Mac?</a> · <a href="#download">All platforms</a>'
+      alt: '<a href="' + BASE + 'Weavit-UI-1.0.1-x64.dmg">On an Intel Mac?</a> · <a href="#download">All platforms</a>'
     };
   } else if (/win/.test(s)) {
     target = {
-      file: 'Weavit-UI-1.0.0-setup.exe',
+      file: 'Weavit-UI-1.0.1-setup.exe',
       label: 'Download for Windows',
       sub: 'x64 · installer',
       row: 'p-win',
@@ -739,12 +817,12 @@ figure{margin:0}
     };
   } else if (/linux|x11|cros/.test(s) && !/android/.test(s)) {
     target = {
-      file: 'Weavit-UI-1.0.0-x86_64.AppImage',
+      file: 'Weavit-UI-1.0.1-x86_64.AppImage',
       label: 'Download for Linux',
       sub: 'x86_64 · AppImage',
       row: 'p-linux',
       status: 'linux · x86_64',
-      alt: '<a href="' + BASE + 'Weavit-UI-1.0.0-amd64.deb">Debian / Ubuntu .deb</a> · <a href="#download">All platforms</a>'
+      alt: '<a href="' + BASE + 'Weavit-UI-1.0.1-amd64.deb">Debian / Ubuntu .deb</a> · <a href="#download">All platforms</a>'
     };
   }
 

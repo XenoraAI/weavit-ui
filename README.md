@@ -40,18 +40,43 @@ Pick the installer for your platform from the release assets:
 | **Windows** | the `-setup.exe` file (NSIS installer) |
 | **Linux** | the `.AppImage` (portable) or `.deb` (Debian/Ubuntu) file |
 
-> These are **unsigned community builds**, so on first launch your OS may warn about an
-> unidentified developer. On macOS, right-click the app → **Open**; on Windows, click
-> **More info → Run anyway**.
->
-> **macOS 1.0.0 only:** the Apple Silicon build in v1.0.0 shipped without a valid
-> signature, so macOS rejects it with *"Weavit UI is damaged and can't be opened."*
-> Upgrade to v1.0.1 or later. To use the 1.0.0 download you already have, repair it with:
->
-> ```bash
-> codesign --force --deep --sign - "/Applications/Weavit UI.app"
-> xattr -dr com.apple.quarantine "/Applications/Weavit UI.app"
-> ```
+These are **unsigned community builds** — notarizing an app requires a paid Apple Developer
+account, and this is a free open-source project. Your OS will flag them on first launch.
+
+### 🍎 First launch on macOS
+
+macOS blocks the app the first time you open it. This is expected, and **you only do this once**:
+
+1. Open **Weavit UI** from Applications. macOS blocks it — click **Done**.
+2. Go to **System Settings → Privacy & Security**.
+3. Scroll down to the **Security** section. You'll see *"Weavit UI" was blocked to protect your Mac.*
+4. Click **Open Anyway**.
+5. Enter your Mac login password (or Touch ID) to confirm.
+
+<img src="docs/approve-app.png" alt="macOS System Settings, Privacy &amp; Security pane, scrolled to the Security section. A row reads &quot;Weavit UI&quot; was blocked to protect your Mac, with an Open Anyway button beside it." width="720">
+
+Weavit UI opens, and every launch after this one is normal — you won't be asked again.
+
+<details>
+<summary><b>Instead getting "Weavit UI is damaged and can't be opened"?</b></summary>
+
+That's a different problem, and it only affects the **Apple Silicon build of v1.0.0**, which
+shipped without a valid code signature. macOS refuses to launch it outright — there's no
+**Open Anyway** button to click.
+
+**[Download v1.0.1 or later](https://github.com/XenoraAI/weavit-ui/releases/latest)**, which
+fixes it. Or repair the copy you already have:
+
+```bash
+codesign --force --deep --sign - "/Applications/Weavit UI.app"
+xattr -dr com.apple.quarantine "/Applications/Weavit UI.app"
+```
+</details>
+
+### 🪟 Windows · 🐧 Linux
+
+On Windows, SmartScreen flags the installer — click **More info → Run anyway**. On Linux there's
+no prompt; mark the AppImage executable with `chmod +x` before running it.
 
 ---
 
