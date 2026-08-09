@@ -108,10 +108,87 @@ export async function createCollection(
   // Use the classic REST schema endpoint — it accepts stable plain JSON and is
   // version-independent, unlike the typed client's builder-object shape.
   const res = await restCall(connectionId, 'POST', '/v1/schema', JSON.stringify(definition))
-  if (!res.ok) {
-    const msg = typeof res.data === 'string' ? res.data : JSON.stringify(res.data)
-    throw new Error(`Create collection failed (HTTP ${res.status}): ${msg}`)
+  if (!res.ok) throw restFail('Create collection', res)
+}
+
+function restFail(action: string, res: { status: number; data: unknown }): Error {
+  const msg = typeof res.data === 'string' ? res.data : JSON.stringify(res.data)
+  return new Error(`${action} failed (HTTP ${res.status}): ${msg}`)
+}
+
+/**
+ * The class definition exactly as the REST schema endpoint returns it — this is
+ * the shape PUT /v1/schema/{class} expects back, so the editor round-trips it
+ * rather than the client's normalized config object.
+ */
+export async function getCollectionSchema(
+  connectionId: string,
+  name: string
+): Promise<unknown> {
+  const res = await restCall(connectionId, 'GET', `/v1/schema/${encodeURIComponent(name)}`)
+  if (!res.ok) throw restFail('Read collection schema', res)
+  return normalizeForIpc(res.data)
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+export function deepMerge(
+  current: unknown,
+  patch: Record<string, unknown>
+): Record<string, unknown> {
+  const base = isPlainObject(current) ? { ...current } : {}
+  for (const [key, value] of Object.entries(patch)) {
+    base[key] = isPlainObject(value) ? deepMerge(base[key], value) : value
   }
+  return base
+}
+
+/**
+ * Updates the mutable parts of a collection definition. Weaviate's PUT replaces
+ * the whole class, so by default we read the current definition and merge the
+ * patch into it — sending a bare patch would blank out everything the user
+ * didn't touch. Pass `replace` when the caller already holds a full class body
+ * (the JSON editor), so deleting a key there actually deletes it.
+ *
+ * Weaviate rejects changes to immutable fields (class name, vectorizer, vector
+ * index type, multi-tenancy enabled, existing property definitions); its error
+ * is surfaced verbatim.
+ */
+export async function updateCollection(
+  connectionId: string,
+  name: string,
+  patch: Record<string, unknown>,
+  replace = false
+): Promise<void> {
+  const path = `/v1/schema/${encodeURIComponent(name)}`
+  let body = patch
+  if (!replace) {
+    const current = await restCall(connectionId, 'GET', path)
+    if (!current.ok) throw restFail('Read collection schema', current)
+    body = deepMerge(current.data, patch)
+  }
+  const res = await restCall(connectionId, 'PUT', path, JSON.stringify(body))
+  if (!res.ok) throw restFail('Update collection', res)
+}
+
+/**
+ * Adds a property to an existing collection. Weaviate supports adding only —
+ * properties cannot be renamed or removed once created.
+ */
+export async function addProperty(
+  connectionId: string,
+  name: string,
+  property: unknown
+): Promise<void> {
+  const res = await restCall(
+    connectionId,
+    'POST',
+    `/v1/schema/${encodeURIComponent(name)}/properties`,
+    JSON.stringify(property)
+  )
+  if (!res.ok) throw restFail('Add property', res)
 }
 
 export async function deleteCollection(connectionId: string, name: string): Promise<void> {

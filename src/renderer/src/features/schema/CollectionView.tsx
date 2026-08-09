@@ -104,6 +104,7 @@ export function CollectionView({ connectionId, collection }: Props) {
                 collection={collection}
                 tenant={mtEnabled ? selectedTenant : undefined}
                 properties={(config.data?.properties ?? []).map((p) => p.name)}
+                vectorizer={config.data?.vectorizer}
               />
             )}
           </ErrorBoundary>

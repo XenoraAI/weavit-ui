@@ -31,6 +31,8 @@ import { notifyErr } from '../lib/notify'
 import { useConnect } from '../lib/useConnect'
 import { connColor } from '../lib/colors'
 import { useApp } from '../store'
+import { EditCollectionModal, type EditTab } from '../features/schema/EditCollectionModal'
+import { DeleteCollectionModal } from '../features/schema/DeleteCollectionModal'
 
 interface Props {
   onNewConnection: () => void
@@ -53,6 +55,8 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
   const selectCollection = useApp((s) => s.selectCollection)
   const connect = useConnect()
   const [filter, setFilter] = useState('')
+  const [editing, setEditing] = useState<{ name: string; tab: EditTab } | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   const connections = useQuery({ queryKey: ['connections'], queryFn: () => api.connections.list() })
 
@@ -74,6 +78,19 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
     clearCache(id)
     // Clearing the active connection hides the collections section entirely.
     if (activeConnectionId === id) setActiveConnection(undefined)
+  }
+
+  // Re-validates the connection with a live round-trip, then drops every cached
+  // query for it so collections created outside the app show up.
+  const refreshConnection = async (id: string) => {
+    const ok = await connect(id)
+    if (!ok) return
+    qc.invalidateQueries({ queryKey: ['collections', id] })
+    qc.invalidateQueries({ queryKey: ['collection', id] })
+    qc.invalidateQueries({ queryKey: ['tenants', id] })
+    qc.invalidateQueries({ queryKey: ['objects', id] })
+    qc.invalidateQueries({ queryKey: ['meta', id] })
+    qc.invalidateQueries({ queryKey: ['nodes', id] })
   }
 
   const removeConnection = async (id: string) => {
@@ -171,12 +188,20 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
                   </Menu.Target>
                   <Menu.Dropdown>
                     {st === 'connected' ? (
-                      <Menu.Item
-                        leftSection={<IconPlugConnectedX size={14} />}
-                        onClick={() => disconnect(c.id)}
-                      >
-                        Disconnect
-                      </Menu.Item>
+                      <>
+                        <Menu.Item
+                          leftSection={<IconRefresh size={14} />}
+                          onClick={() => refreshConnection(c.id)}
+                        >
+                          Refresh
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconPlugConnectedX size={14} />}
+                          onClick={() => disconnect(c.id)}
+                        >
+                          Disconnect
+                        </Menu.Item>
+                      </>
                     ) : (
                       <Menu.Item
                         leftSection={<IconPlugConnected size={14} />}
@@ -253,30 +278,62 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
               {filtered.map((c) => {
                 const isSel = c.name === selectedCollection
                 return (
-                  <UnstyledButton
-                    key={c.name}
-                    onClick={() => selectCollection(c.name)}
-                    style={{
-                      borderRadius: 8,
-                      padding: '6px 8px',
-                      borderLeft: `3px solid ${isSel ? activeColor : 'transparent'}`,
-                      background: isSel ? `${activeColor}18` : 'transparent'
-                    }}
-                  >
-                    <Group gap={8} wrap="nowrap" justify="space-between">
-                      <Group gap={8} wrap="nowrap" style={{ overflow: 'hidden' }}>
-                        <IconDatabase size={15} style={{ color: isSel ? activeColor : undefined, opacity: 0.85 }} />
-                        <Text size="sm" truncate>
-                          {c.name}
-                        </Text>
+                  <Group key={c.name} gap={2} wrap="nowrap">
+                    <UnstyledButton
+                      onClick={() => selectCollection(c.name)}
+                      style={{
+                        flex: 1,
+                        overflow: 'hidden',
+                        borderRadius: 8,
+                        padding: '6px 8px',
+                        borderLeft: `3px solid ${isSel ? activeColor : 'transparent'}`,
+                        background: isSel ? `${activeColor}18` : 'transparent'
+                      }}
+                    >
+                      <Group gap={8} wrap="nowrap" justify="space-between">
+                        <Group gap={8} wrap="nowrap" style={{ overflow: 'hidden' }}>
+                          <IconDatabase size={15} style={{ color: isSel ? activeColor : undefined, opacity: 0.85 }} />
+                          <Text size="sm" truncate>
+                            {c.name}
+                          </Text>
+                        </Group>
+                        {c.multiTenancyEnabled && (
+                          <Badge size="xs" variant="light" color="grape">
+                            MT
+                          </Badge>
+                        )}
                       </Group>
-                      {c.multiTenancyEnabled && (
-                        <Badge size="xs" variant="light" color="grape">
-                          MT
-                        </Badge>
-                      )}
-                    </Group>
-                  </UnstyledButton>
+                    </UnstyledButton>
+                    <Menu position="bottom-end" withArrow>
+                      <Menu.Target>
+                        <ActionIcon size="sm" variant="subtle" color="gray">
+                          <IconDots size={14} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <Menu.Item
+                          leftSection={<IconEdit size={14} />}
+                          onClick={() => setEditing({ name: c.name, tab: 'settings' })}
+                        >
+                          Edit
+                        </Menu.Item>
+                        <Menu.Item
+                          leftSection={<IconPlus size={14} />}
+                          onClick={() => setEditing({ name: c.name, tab: 'property' })}
+                        >
+                          Add property
+                        </Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item
+                          color="red"
+                          leftSection={<IconTrash size={14} />}
+                          onClick={() => setDeleting(c.name)}
+                        >
+                          Delete
+                        </Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Group>
                 )
               })}
               {activeStatus === 'connected' && filtered.length === 0 && !collections.isLoading && (
@@ -287,6 +344,24 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
             </Stack>
           </ScrollArea>
         </>
+      )}
+
+      {activeConnectionId && editing && (
+        <EditCollectionModal
+          opened
+          connectionId={activeConnectionId}
+          collection={editing.name}
+          initialTab={editing.tab}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {activeConnectionId && deleting && (
+        <DeleteCollectionModal
+          opened
+          connectionId={activeConnectionId}
+          collection={deleting}
+          onClose={() => setDeleting(null)}
+        />
       )}
     </Stack>
   )

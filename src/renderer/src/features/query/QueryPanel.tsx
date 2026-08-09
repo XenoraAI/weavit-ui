@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Stack,
@@ -17,7 +17,8 @@ import {
   Center,
   Loader,
   Badge,
-  Alert
+  Alert,
+  Tooltip
 } from '@mantine/core'
 import { IconSearch, IconAlertTriangle } from '@tabler/icons-react'
 import { useMutation } from '@tanstack/react-query'
@@ -32,6 +33,8 @@ interface Props {
   collection: string
   tenant?: string
   properties: string[]
+  /** Collection vectorizer; undefined or 'none' means no server-side embedding. */
+  vectorizer?: string
 }
 
 const SEARCH_TYPES: { label: string; value: SearchType }[] = [
@@ -50,7 +53,33 @@ function metaText(o: WeaviateObject): string | undefined {
   return undefined
 }
 
-export function QueryPanel({ connectionId, collection, tenant, properties }: Props) {
+/** nearText and hybrid ask Weaviate to embed the query string server-side. */
+const NEEDS_VECTORIZER: SearchType[] = ['nearText', 'hybrid']
+
+interface VectorCheck {
+  error?: string
+  dims?: number
+}
+
+function checkVector(text: string): VectorCheck {
+  const t = text.trim()
+  if (!t) return { error: 'Paste a JSON array of numbers' }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(t)
+  } catch {
+    return { error: 'Not valid JSON' }
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    return { error: 'Expected a non-empty JSON array' }
+  }
+  if (parsed.some((n) => typeof n !== 'number' || !Number.isFinite(n))) {
+    return { error: 'All elements must be finite numbers' }
+  }
+  return { dims: parsed.length }
+}
+
+export function QueryPanel({ connectionId, collection, tenant, properties, vectorizer }: Props) {
   const [type, setType] = useState<SearchType>('fetch')
   const [queryText, setQueryText] = useState('')
   const [queryVector, setQueryVector] = useState('')
@@ -91,12 +120,48 @@ export function QueryPanel({ connectionId, collection, tenant, properties }: Pro
 
   const needsText = type === 'nearText' || type === 'bm25' || type === 'hybrid'
 
+  // Fail open while the config is still loading, or if we couldn't read the
+  // vectorizer at all — only block when Weaviate affirmatively reports 'none'.
+  const canVectorizeText = vectorizer == null || vectorizer.toLowerCase() !== 'none'
+  // The "why" rides on the disabled tabs as a tooltip rather than a standing
+  // banner — it's only of interest to someone reaching for Near text / Hybrid.
+  const searchTypes = SEARCH_TYPES.map((t) => {
+    const blocked = !canVectorizeText && NEEDS_VECTORIZER.includes(t.value)
+    if (!blocked) return t
+    return {
+      value: t.value,
+      disabled: true,
+      label: (
+        <Tooltip
+          multiline
+          w={280}
+          withArrow
+          label="vectorizer: none — Weaviate has no module to embed the query text for this collection. Use Near vector with a precomputed embedding, or BM25 for keyword search."
+        >
+          <span>{t.label}</span>
+        </Tooltip>
+      )
+    }
+  })
+
+  // Vectorizer is only known once the collection config loads, so a disabled
+  // type can already be selected — fall back rather than let it 500 on Weaviate.
+  useEffect(() => {
+    if (!canVectorizeText && NEEDS_VECTORIZER.includes(type)) setType('fetch')
+  }, [canVectorizeText, type])
+
+  const vectorCheck = useMemo(
+    () => (type === 'nearVector' ? checkVector(queryVector) : {}),
+    [type, queryVector]
+  )
+  const vectorInvalid = type === 'nearVector' && vectorCheck.error != null
+
   return (
     <Box style={{ height: '100%', overflow: 'auto' }} p="md">
       <Paper withBorder p="md" mb="md">
         <Stack gap="sm">
           <SegmentedControl
-            data={SEARCH_TYPES}
+            data={searchTypes}
             value={type}
             onChange={(v) => setType(v as SearchType)}
           />
@@ -117,6 +182,8 @@ export function QueryPanel({ connectionId, collection, tenant, properties }: Pro
               minRows={2}
               value={queryVector}
               onChange={(e) => setQueryVector(e.currentTarget.value)}
+              error={queryVector.trim() ? vectorCheck.error : undefined}
+              description={vectorCheck.dims ? `${vectorCheck.dims} dimensions` : undefined}
             />
           )}
           {type === 'hybrid' && (
@@ -160,6 +227,7 @@ export function QueryPanel({ connectionId, collection, tenant, properties }: Pro
             <Button
               leftSection={<IconSearch size={16} />}
               loading={search.isPending}
+              disabled={vectorInvalid}
               onClick={() => search.mutate()}
             >
               Run search

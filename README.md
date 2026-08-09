@@ -52,7 +52,8 @@ Pick the installer for your platform from the release assets:
   API-key or anonymous auth. Credentials are encrypted at rest with your OS keychain
   (Electron `safeStorage`). Extra headers for third-party vectorizer keys.
 - **Schema & collections** — sidebar tree, per-collection config (properties, vectorizer,
-  vector index, multi-tenancy), create & delete collections.
+  vector index, multi-tenancy). Create, edit and delete collections: change settings, add
+  properties, and drop a collection behind a typed confirmation.
 - **Data** — paginated object browser, structured + raw-JSON views, named vectors, tenant
   selector, insert / edit (merge or replace) / delete.
 - **Search** — `nearText`, `nearVector`, BM25, and hybrid, with a visual filter builder,

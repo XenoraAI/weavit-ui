@@ -11,19 +11,17 @@ import {
   SimpleGrid,
   Loader,
   Center,
-  Modal,
   Alert,
   Code,
-  TextInput,
   Divider,
   Tabs
 } from '@mantine/core'
-import { IconTrash, IconAlertTriangle } from '@tabler/icons-react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { IconTrash, IconAlertTriangle, IconEdit, IconPlus } from '@tabler/icons-react'
+import { useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
-import { notifyErr, notifyOk } from '../../lib/notify'
-import { useApp } from '../../store'
 import { JsonView } from '../../components/JsonView'
+import { EditCollectionModal, type EditTab } from './EditCollectionModal'
+import { DeleteCollectionModal } from './DeleteCollectionModal'
 
 interface Props {
   connectionId: string
@@ -42,31 +40,13 @@ function Stat({ label, value }: { label: string; value: ReactNode }) {
 }
 
 export function CollectionDetail({ connectionId, collection }: Props) {
-  const qc = useQueryClient()
-  const selectCollection = useApp((s) => s.selectCollection)
   const [confirm, setConfirm] = useState(false)
-  const [confirmName, setConfirmName] = useState('')
-  const [busy, setBusy] = useState(false)
+  const [editTab, setEditTab] = useState<EditTab | null>(null)
 
   const config = useQuery({
     queryKey: ['collection', connectionId, collection],
     queryFn: () => api.schema.getCollection(connectionId, collection)
   })
-
-  const doDelete = async () => {
-    setBusy(true)
-    try {
-      await api.schema.deleteCollection(connectionId, collection)
-      notifyOk(`Deleted collection ${collection}`)
-      qc.invalidateQueries({ queryKey: ['collections', connectionId] })
-      selectCollection(undefined)
-    } catch (e) {
-      notifyErr(e, 'Delete failed')
-    } finally {
-      setBusy(false)
-      setConfirm(false)
-    }
-  }
 
   if (config.isLoading) {
     return (
@@ -90,6 +70,16 @@ export function CollectionDetail({ connectionId, collection }: Props) {
   return (
     <Box style={{ height: '100%', overflow: 'auto' }} p="md">
       <Stack>
+        <Group justify="flex-end">
+          <Button
+            variant="light"
+            leftSection={<IconEdit size={15} />}
+            onClick={() => setEditTab('settings')}
+          >
+            Edit collection
+          </Button>
+        </Group>
+
         <SimpleGrid cols={{ base: 2, md: 4 }}>
           <Stat label="Properties" value={c.properties.length} />
           <Stat label="Vectorizer" value={c.vectorizer ?? 'none'} />
@@ -107,6 +97,16 @@ export function CollectionDetail({ connectionId, collection }: Props) {
           </Tabs.List>
 
           <Tabs.Panel value="properties">
+            <Group justify="flex-end" mb="xs">
+              <Button
+                size="compact-sm"
+                variant="light"
+                leftSection={<IconPlus size={14} />}
+                onClick={() => setEditTab('property')}
+              >
+                Add property
+              </Button>
+            </Group>
             <Table withTableBorder striped>
               <Table.Thead>
                 <Table.Tr>
@@ -156,25 +156,21 @@ export function CollectionDetail({ connectionId, collection }: Props) {
         </Group>
       </Stack>
 
-      <Modal opened={confirm} onClose={() => setConfirm(false)} title="Delete collection" centered>
-        <Alert color="red" icon={<IconAlertTriangle />} mb="md">
-          This permanently deletes <Code>{collection}</Code> and every object in it.
-        </Alert>
-        <TextInput
-          label={`Type "${collection}" to confirm`}
-          value={confirmName}
-          onChange={(e) => setConfirmName(e.currentTarget.value)}
-          mb="md"
+      <DeleteCollectionModal
+        opened={confirm}
+        connectionId={connectionId}
+        collection={collection}
+        onClose={() => setConfirm(false)}
+      />
+      {editTab && (
+        <EditCollectionModal
+          opened
+          connectionId={connectionId}
+          collection={collection}
+          initialTab={editTab}
+          onClose={() => setEditTab(null)}
         />
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => setConfirm(false)}>
-            Cancel
-          </Button>
-          <Button color="red" disabled={confirmName !== collection} loading={busy} onClick={doDelete}>
-            Delete
-          </Button>
-        </Group>
-      </Modal>
+      )}
     </Box>
   )
 }

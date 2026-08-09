@@ -12,6 +12,29 @@ import type {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+// The renderer sends the vector as raw textarea contents, so anything can land
+// here — blank, truncated JSON, a bare string. Fail with a message the user can
+// act on instead of leaking a raw SyntaxError across IPC.
+export function parseQueryVector(input: string | undefined): number[] {
+  const text = (input ?? '').trim()
+  if (!text) {
+    throw new Error('Query vector is required — paste a JSON array of numbers, e.g. [0.12, 0.98, …]')
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    throw new Error('Query vector is not valid JSON — expected an array of numbers, e.g. [0.12, 0.98, …]')
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error('Query vector must be a non-empty JSON array of numbers, e.g. [0.12, 0.98, …]')
+  }
+  if (parsed.some((n) => typeof n !== 'number' || !Number.isFinite(n))) {
+    throw new Error('Query vector must contain only finite numbers')
+  }
+  return parsed as number[]
+}
+
 const SEARCH_METADATA = [
   'distance',
   'certainty',
@@ -54,7 +77,7 @@ export async function search(req: SearchRequest): Promise<SearchResult> {
       })
       break
     case 'nearVector': {
-      const vector = JSON.parse(req.queryVector ?? '[]')
+      const vector = parseQueryVector(req.queryVector)
       result = await collection.query.nearVector(vector, opts)
       break
     }

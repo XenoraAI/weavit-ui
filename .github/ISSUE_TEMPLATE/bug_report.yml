@@ -28,7 +28,7 @@ body:
     id: version
     attributes:
       label: Weavit UI version
-      placeholder: e.g. 0.1.0 (see Help / About, or the release you downloaded)
+      placeholder: e.g. 1.0.0 (see Help / About, or the release you downloaded)
     validations:
       required: true
   - type: dropdown

@@ -98,8 +98,19 @@ export function registerIpc(): void {
   handle(CH.schema.getCollection, (connectionId: string, name: string) =>
     collections.getCollection(connectionId, name)
   )
+  handle(CH.schema.getCollectionSchema, (connectionId: string, name: string) =>
+    collections.getCollectionSchema(connectionId, name)
+  )
   handle(CH.schema.createCollection, (connectionId: string, definition: unknown) =>
     collections.createCollection(connectionId, definition)
+  )
+  handle(
+    CH.schema.updateCollection,
+    (connectionId: string, name: string, patch: Record<string, unknown>, replace?: boolean) =>
+      collections.updateCollection(connectionId, name, patch, replace)
+  )
+  handle(CH.schema.addProperty, (connectionId: string, name: string, property: unknown) =>
+    collections.addProperty(connectionId, name, property)
   )
   handle(CH.schema.deleteCollection, (connectionId: string, name: string) =>
     collections.deleteCollection(connectionId, name)
