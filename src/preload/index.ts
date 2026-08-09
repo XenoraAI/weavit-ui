@@ -32,8 +32,18 @@ const api: WeftApi = {
     listCollections: (connectionId: string) => invoke(CH.schema.listCollections, connectionId),
     getCollection: (connectionId: string, name: string) =>
       invoke(CH.schema.getCollection, connectionId, name),
+    getCollectionSchema: (connectionId: string, name: string) =>
+      invoke(CH.schema.getCollectionSchema, connectionId, name),
     createCollection: (connectionId: string, definition: unknown) =>
       invoke(CH.schema.createCollection, connectionId, definition),
+    updateCollection: (
+      connectionId: string,
+      name: string,
+      patch: Record<string, unknown>,
+      replace?: boolean
+    ) => invoke(CH.schema.updateCollection, connectionId, name, patch, replace),
+    addProperty: (connectionId: string, name: string, property: unknown) =>
+      invoke(CH.schema.addProperty, connectionId, name, property),
     deleteCollection: (connectionId: string, name: string) =>
       invoke(CH.schema.deleteCollection, connectionId, name),
     listTenants: (connectionId: string, collection: string) =>

@@ -10,35 +10,28 @@ import {
   ActionIcon,
   Text,
   SegmentedControl,
-  Divider
+  Divider,
+  Card
 } from '@mantine/core'
 import { IconPlus, IconTrash } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { notifyErr, notifyOk } from '../../lib/notify'
 import { CodeEditor } from '../../components/CodeEditor'
+import { VECTORIZERS } from './schemaOptions'
+import { PropertyFields } from './PropertyFields'
+import {
+  duplicateNames,
+  newPropertyDraft,
+  toPropertyDefinition,
+  type PropertyDraft
+} from './propertyDraft'
 
 interface Props {
   opened: boolean
   connectionId: string
   onClose: () => void
 }
-
-interface PropRow {
-  name: string
-  dataType: string
-}
-
-const DATA_TYPES = ['text', 'text[]', 'int', 'int[]', 'number', 'number[]', 'boolean', 'date', 'uuid', 'object']
-
-const VECTORIZERS = [
-  'none',
-  'text2vec-openai',
-  'text2vec-cohere',
-  'text2vec-huggingface',
-  'text2vec-ollama',
-  'text2vec-contextionary'
-]
 
 const TEMPLATE = `{
   "class": "Article",
@@ -58,12 +51,16 @@ export function CreateCollectionModal({ opened, connectionId, onClose }: Props) 
   const [description, setDescription] = useState('')
   const [vectorizer, setVectorizer] = useState('none')
   const [multiTenancy, setMultiTenancy] = useState(false)
-  const [props, setProps] = useState<PropRow[]>([{ name: '', dataType: 'text' }])
+  const [props, setProps] = useState<PropertyDraft[]>([newPropertyDraft()])
   const [rawText, setRawText] = useState(TEMPLATE)
   const [busy, setBusy] = useState(false)
 
-  const setProp = (i: number, patch: Partial<PropRow>) =>
+  const setProp = (i: number, patch: Partial<PropertyDraft>) =>
     setProps((p) => p.map((r, idx) => (idx === i ? { ...r, ...patch } : r)))
+
+  const dupes = duplicateNames(props.map((p) => p.name))
+  const isDupe = (p: PropertyDraft) => dupes.has(p.name.trim().toLowerCase())
+  const guidedInvalid = mode === 'guided' && (!name.trim() || dupes.size > 0)
 
   const buildDefinition = () => {
     if (mode === 'advanced') return JSON.parse(rawText)
@@ -72,9 +69,7 @@ export function CreateCollectionModal({ opened, connectionId, onClose }: Props) 
       class: name.trim(),
       description: description.trim() || undefined,
       vectorizer,
-      properties: props
-        .filter((p) => p.name.trim())
-        .map((p) => ({ name: p.name.trim(), dataType: [p.dataType] })),
+      properties: props.filter((p) => p.name.trim()).map(toPropertyDefinition),
       multiTenancyConfig: { enabled: multiTenancy }
     }
   }
@@ -131,35 +126,34 @@ export function CreateCollectionModal({ opened, connectionId, onClose }: Props) 
             </Group>
 
             <Divider label="Properties" labelPosition="left" />
-            <Stack gap="xs">
+            <Stack gap="sm">
               {props.map((p, i) => (
-                <Group key={i} gap="xs" wrap="nowrap">
-                  <TextInput
-                    placeholder="property name"
-                    value={p.name}
-                    onChange={(e) => setProp(i, { name: e.currentTarget.value })}
-                    style={{ flex: 1 }}
+                <Card key={i} withBorder padding="sm">
+                  <Group justify="space-between" mb="xs">
+                    <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                      Property {i + 1}
+                    </Text>
+                    <ActionIcon
+                      color="red"
+                      variant="subtle"
+                      aria-label={`Remove property ${i + 1}`}
+                      onClick={() => setProps((prev) => prev.filter((_, idx) => idx !== i))}
+                    >
+                      <IconTrash size={15} />
+                    </ActionIcon>
+                  </Group>
+                  <PropertyFields
+                    value={p}
+                    onChange={(patch) => setProp(i, patch)}
+                    nameError={isDupe(p) ? 'Duplicate property name' : undefined}
                   />
-                  <Select
-                    data={DATA_TYPES}
-                    value={p.dataType}
-                    onChange={(v) => setProp(i, { dataType: v ?? 'text' })}
-                    w={130}
-                  />
-                  <ActionIcon
-                    color="red"
-                    variant="subtle"
-                    onClick={() => setProps((prev) => prev.filter((_, idx) => idx !== i))}
-                  >
-                    <IconTrash size={15} />
-                  </ActionIcon>
-                </Group>
+                </Card>
               ))}
               <Button
-                size="compact-xs"
+                size="compact-sm"
                 variant="light"
                 leftSection={<IconPlus size={13} />}
-                onClick={() => setProps((p) => [...p, { name: '', dataType: 'text' }])}
+                onClick={() => setProps((p) => [...p, newPropertyDraft()])}
                 style={{ alignSelf: 'flex-start' }}
               >
                 Add property
@@ -185,7 +179,7 @@ export function CreateCollectionModal({ opened, connectionId, onClose }: Props) 
           <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
-          <Button loading={busy} onClick={save}>
+          <Button loading={busy} disabled={guidedInvalid} onClick={save}>
             Create
           </Button>
         </Group>

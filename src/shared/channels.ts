@@ -11,7 +11,10 @@ export const CH = {
   schema: {
     listCollections: 'schema:listCollections',
     getCollection: 'schema:getCollection',
+    getCollectionSchema: 'schema:getCollectionSchema',
     createCollection: 'schema:createCollection',
+    updateCollection: 'schema:updateCollection',
+    addProperty: 'schema:addProperty',
     deleteCollection: 'schema:deleteCollection',
     listTenants: 'schema:listTenants'
   },

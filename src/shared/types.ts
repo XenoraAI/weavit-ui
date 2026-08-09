@@ -238,7 +238,16 @@ export interface WeftApi {
   schema: {
     listCollections(connectionId: string): Promise<CollectionSummary[]>
     getCollection(connectionId: string, name: string): Promise<CollectionConfig>
+    getCollectionSchema(connectionId: string, name: string): Promise<unknown>
     createCollection(connectionId: string, definition: unknown): Promise<void>
+    /** Merges `patch` into the current definition unless `replace` is set. */
+    updateCollection(
+      connectionId: string,
+      name: string,
+      patch: Record<string, unknown>,
+      replace?: boolean
+    ): Promise<void>
+    addProperty(connectionId: string, name: string, property: unknown): Promise<void>
     deleteCollection(connectionId: string, name: string): Promise<void>
     listTenants(connectionId: string, collection: string): Promise<TenantInfo[]>
   }
