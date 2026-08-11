@@ -2,8 +2,9 @@
 
 **Weavit UI is a free, open-source Weaviate GUI: a cross-platform desktop client for the
 [Weaviate](https://weaviate.io) vector database.** Browse collections, view/edit/delete/insert
-objects, inspect named vectors, and run vector, keyword (BM25), and hybrid searches — against
-**any** Weaviate instance (local, self-hosted, or Weaviate Cloud).
+objects, inspect named vectors, and run vector, keyword (BM25), and hybrid searches — then
+manage the instance itself: tenants, backups, aliases, users and roles, and replication —
+against **any** Weaviate instance (local, self-hosted, or Weaviate Cloud).
 
 🌐 **[weavit-ui website →](https://xenoraai.github.io/weavit-ui/)**
 
@@ -83,16 +84,32 @@ no prompt; mark the AppImage executable with `chmod +x` before running it.
 ## Features
 
 - **Connections** — local, Weaviate Cloud, or fully custom (separate HTTP + gRPC host/port).
-  API-key or anonymous auth. Credentials are encrypted at rest with your OS keychain
-  (Electron `safeStorage`). Extra headers for third-party vectorizer keys.
+  Anonymous, API-key, or OIDC auth (password, client credentials, bearer token), with
+  per-request timeouts and an optional gRPC proxy. Credentials are encrypted at rest with
+  your OS keychain (Electron `safeStorage`). Extra headers for third-party vectorizer keys.
 - **Schema & collections** — sidebar tree, per-collection config (properties, vectorizer,
   vector index, multi-tenancy). Create, edit and delete collections: change settings, add
-  properties, and drop a collection behind a typed confirmation.
-- **Data** — paginated object browser, structured + raw-JSON views, named vectors, tenant
-  selector, insert / edit (merge or replace) / delete.
-- **Search** — `nearText`, `nearVector`, BM25, and hybrid, with a visual filter builder,
-  target-vector selection, and property projection.
-- **Admin** — cluster meta & modules, node status, and a raw GraphQL / REST console.
+  properties, and drop a collection behind a typed confirmation. Import/export a schema
+  to move a definition between instances.
+- **Data** — paginated object browser with click-to-sort columns, structured + raw-JSON
+  views, named vectors, tenant selector, insert / edit (merge or replace) / delete. Bulk
+  import from JSON, NDJSON or CSV, and export results or a whole collection.
+- **Search & RAG** — `nearText`, `nearVector`, `nearObject`, `nearImage`, `nearMedia`, BM25
+  and hybrid, with a visual filter builder, target-vector selection, property projection,
+  autocut, group-by, reranking and consistency levels. Generative search (single-prompt and
+  grouped-task) runs in its own tab, and every query is kept in a re-runnable history.
+- **Multi-tenancy** — per-collection tenant list; create, delete, and move tenants between
+  active, inactive and offloaded.
+- **Backup & restore** — create, watch, cancel and restore backups on any configured
+  backend, with per-collection include/exclude.
+- **Aliases** — list, create, repoint and delete collection aliases.
+- **Access control (RBAC)** — roles with a permission editor covering every resource kind,
+  database users (create, rotate keys, activate/deactivate), role grants, and OIDC group
+  assignments. Connections whose key is read-only say so in the status bar.
+- **Cluster** — per-node and per-shard detail, sharding state, and replica movement with a
+  live replication queue.
+- **Admin** — cluster meta & modules, node status, tokenizer preview, and raw GraphQL /
+  REST consoles.
 
 ## Architecture
 
@@ -144,7 +161,8 @@ see [RELEASING.md](./RELEASING.md).
 ```
 src/main/       Electron main: weaviate client wrapper, IPC handlers, encrypted secrets
 src/preload/    contextBridge — the only bridge to the renderer
-src/renderer/   React UI (features: connections, schema, data, query, admin)
+src/renderer/   React UI (features: connections, schema, data, query, generate, stats,
+                tenants, alias, backup, rbac, cluster, admin)
 src/shared/     IPC contract types + channel names (shared by main & renderer)
 ```
 

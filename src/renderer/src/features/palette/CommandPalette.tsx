@@ -4,12 +4,17 @@ import {
   IconPlugConnected,
   IconPlus,
   IconRefresh,
-  IconSearch
+  IconSearch,
+  IconTag,
+  IconArchive,
+  IconShieldLock,
+  IconServer,
+  IconLayoutDashboard
 } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import { connColor } from '../../lib/colors'
-import { useApp, type MainTab } from '../../store'
+import { useApp, type AdminView, type MainTab } from '../../store'
 import { useConnect } from '../../lib/useConnect'
 
 interface Props {
@@ -24,6 +29,7 @@ export function CommandPalette({ onNewConnection, onNewCollection }: Props) {
   const { activeConnectionId, status } = useApp()
   const selectCollection = useApp((s) => s.selectCollection)
   const setMainTab = useApp((s) => s.setMainTab)
+  const setAdminView = useApp((s) => s.setAdminView)
   const connect = useConnect()
 
   const connections = useQuery({ queryKey: ['connections'], queryFn: () => api.connections.list() })
@@ -54,6 +60,25 @@ export function CommandPalette({ onNewConnection, onNewCollection }: Props) {
       })
     }
     groups.push({ group: 'Collections', actions })
+  }
+
+  if (connected) {
+    const views: { view: AdminView; label: string; icon: React.ReactNode }[] = [
+      { view: 'overview', label: 'Overview', icon: <IconLayoutDashboard size={18} /> },
+      { view: 'aliases', label: 'Aliases', icon: <IconTag size={18} /> },
+      { view: 'backup', label: 'Backup & restore', icon: <IconArchive size={18} /> },
+      { view: 'rbac', label: 'Access control', icon: <IconShieldLock size={18} /> },
+      { view: 'cluster', label: 'Cluster', icon: <IconServer size={18} /> }
+    ]
+    groups.push({
+      group: 'Instance',
+      actions: views.map((v) => ({
+        id: `view-${v.view}`,
+        label: v.label,
+        leftSection: v.icon,
+        onClick: () => setAdminView(v.view)
+      }))
+    })
   }
 
   const connActions: SpotlightActionData[] = (connections.data ?? []).map((c) => ({

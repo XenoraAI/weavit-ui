@@ -1,5 +1,5 @@
 import type { ConnectionConfig } from '@shared/types'
-import { getConnectionConfig } from './connectionManager'
+import { getClient, getConnectionConfig } from './connectionManager'
 import { getSecret } from '../store/store'
 
 // A thin REST layer for endpoints the typed client doesn't expose directly
@@ -22,12 +22,29 @@ export function baseUrl(cfg: ConnectionConfig): string {
   return `${scheme}://${host}:${port}`
 }
 
-function authHeaders(cfg: ConnectionConfig): Record<string, string> {
+const OIDC_AUTH_TYPES = new Set(['oidcPassword', 'oidcClientCredentials', 'oidcToken'])
+
+/**
+ * An API key is a bearer token as-is. Under OIDC the usable token is whatever
+ * the client negotiated (and keeps refreshed), so we borrow it from the client
+ * rather than trying to run the token exchange a second time here.
+ */
+async function authHeaders(cfg: ConnectionConfig): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+
   if (cfg.authType === 'apiKey') {
     const key = getSecret(cfg.id)
     if (key) headers['Authorization'] = `Bearer ${key}`
+  } else if (OIDC_AUTH_TYPES.has(cfg.authType)) {
+    try {
+      const details = await (await getClient(cfg.id)).getConnectionDetails()
+      if (details?.bearerToken) headers['Authorization'] = `Bearer ${details.bearerToken}`
+    } catch {
+      // Leave the request unauthenticated; the server's 401 is a clearer
+      // signal than a failure to build the header would be.
+    }
   }
+
   if (cfg.headers) Object.assign(headers, cfg.headers)
   return headers
 }
@@ -48,7 +65,7 @@ export async function restCall(
   const url = baseUrl(cfg) + (path.startsWith('/') ? path : `/${path}`)
   const res = await fetch(url, {
     method,
-    headers: authHeaders(cfg),
+    headers: await authHeaders(cfg),
     body: body && method !== 'GET' && method !== 'HEAD' ? body : undefined
   })
   const text = await res.text()

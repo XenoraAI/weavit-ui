@@ -16,6 +16,7 @@ export function InsertModal({ connectionId, collection, tenant, onClose, onInser
   const [propsText, setPropsText] = useState('{\n  \n}')
   const [id, setId] = useState('')
   const [vectorText, setVectorText] = useState('')
+  const [referencesText, setReferencesText] = useState('')
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [busy, setBusy] = useState(false)
 
@@ -24,9 +25,21 @@ export function InsertModal({ connectionId, collection, tenant, onClose, onInser
     try {
       const properties = JSON.parse(propsText)
       let vector: number[] | undefined
+      let vectors: Record<string, number[]> | undefined
       if (vectorText.trim()) {
-        vector = JSON.parse(vectorText)
-        if (!Array.isArray(vector)) throw new Error('Vector must be a JSON array of numbers')
+        const parsed = JSON.parse(vectorText)
+        // A bare array is the default vector space; an object names each one.
+        if (Array.isArray(parsed)) vector = parsed
+        else if (parsed && typeof parsed === 'object') vectors = parsed
+        else throw new Error('Vector must be a JSON array, or an object of named vectors')
+      }
+      let references: Record<string, string[]> | undefined
+      if (referencesText.trim()) {
+        const parsed = JSON.parse(referencesText)
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+          throw new Error('References must be an object of property → UUID array')
+        }
+        references = parsed
       }
       const res = await api.data.insert({
         connectionId,
@@ -34,6 +47,8 @@ export function InsertModal({ connectionId, collection, tenant, onClose, onInser
         properties,
         id: id.trim() || undefined,
         vector,
+        vectors,
+        references,
         tenant
       })
       notifyOk(`Inserted ${res.uuid}`)
@@ -56,7 +71,7 @@ export function InsertModal({ connectionId, collection, tenant, onClose, onInser
         </div>
 
         <Anchor size="xs" onClick={() => setShowAdvanced((s) => !s)}>
-          {showAdvanced ? 'Hide' : 'Show'} advanced (custom UUID, bring-your-own vector)
+          {showAdvanced ? 'Hide' : 'Show'} advanced (custom UUID, vectors, references)
         </Anchor>
         <Collapse in={showAdvanced}>
           <Stack gap="sm">
@@ -67,13 +82,22 @@ export function InsertModal({ connectionId, collection, tenant, onClose, onInser
               onChange={(e) => setId(e.currentTarget.value)}
             />
             <Textarea
-              label="Vector (optional JSON array)"
-              description="Only for collections without a server-side vectorizer"
+              label="Vector (optional)"
+              description='A JSON array for the default space, or {"name": [...]} for named vectors. Only for collections without a server-side vectorizer.'
               placeholder="[0.12, 0.98, …]"
               autosize
               minRows={2}
               value={vectorText}
               onChange={(e) => setVectorText(e.currentTarget.value)}
+            />
+            <Textarea
+              label="References (optional)"
+              description="Cross-references as property → array of target UUIDs"
+              placeholder='{ "hasCategory": ["8f2c…"] }'
+              autosize
+              minRows={2}
+              value={referencesText}
+              onChange={(e) => setReferencesText(e.currentTarget.value)}
             />
           </Stack>
         </Collapse>

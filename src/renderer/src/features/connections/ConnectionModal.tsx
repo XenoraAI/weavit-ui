@@ -14,7 +14,9 @@ import {
   Divider,
   Text,
   ColorSwatch,
-  Tooltip
+  Tooltip,
+  Accordion,
+  TagsInput
 } from '@mantine/core'
 import { IconCheck } from '@tabler/icons-react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -79,17 +81,27 @@ export function ConnectionModal({ opened, onClose, onSaved, editing }: Props) {
         httpSecure: f.httpSecure,
         grpcHost: f.grpcHost,
         grpcPort: f.grpcPort,
-        grpcSecure: f.grpcSecure
+        grpcSecure: f.grpcSecure,
+        oidcUsername: f.oidcUsername,
+        oidcClientId: f.oidcClientId,
+        oidcScopes: f.oidcScopes,
+        timeout: f.timeout,
+        proxies: f.proxies,
+        skipInitChecks: f.skipInitChecks
       }
-      // apiKey: undefined => keep existing; null => clear; string => set.
+      // The single stored secret means something different per auth method, so
+      // any authenticated method can supply one.
+      // undefined => keep existing; null => clear; string => set.
       let secretArg: string | null | undefined
-      if (config.authType !== 'apiKey') secretArg = null
+      if (config.authType === 'none') secretArg = null
       else if (apiKey) secretArg = apiKey
       else secretArg = editing?.hasApiKey ? undefined : null
 
       const saved = await api.connections.upsert(config, secretArg)
       // Refresh the sidebar list so the new/edited connection shows up.
       await qc.invalidateQueries({ queryKey: ['connections'] })
+      // Editing credentials can mean connecting as a different user entirely.
+      await qc.invalidateQueries({ queryKey: ['capabilities', saved.id] })
       notifyOk('Connection saved')
       onClose()
       onSaved(saved)
@@ -196,7 +208,10 @@ export function ConnectionModal({ opened, onClose, onSaved, editing }: Props) {
           onChange={(v) => set({ authType: (v as AuthType) ?? 'none' })}
           data={[
             { label: 'None (anonymous)', value: 'none' },
-            { label: 'API key', value: 'apiKey' }
+            { label: 'API key', value: 'apiKey' },
+            { label: 'OIDC — username & password', value: 'oidcPassword' },
+            { label: 'OIDC — client credentials', value: 'oidcClientCredentials' },
+            { label: 'OIDC — access token', value: 'oidcToken' }
           ]}
         />
         {f.authType === 'apiKey' && (
@@ -205,6 +220,54 @@ export function ConnectionModal({ opened, onClose, onSaved, editing }: Props) {
             placeholder={editing?.hasApiKey ? '•••••••• (stored — leave blank to keep)' : 'weaviate api key'}
             value={apiKey}
             onChange={(e) => setApiKey(e.currentTarget.value)}
+          />
+        )}
+        {f.authType === 'oidcPassword' && (
+          <>
+            <TextInput
+              label="Username"
+              value={f.oidcUsername ?? ''}
+              onChange={(e) => set({ oidcUsername: e.currentTarget.value })}
+            />
+            <PasswordInput
+              label="Password"
+              placeholder={editing?.hasApiKey ? '•••••••• (stored — leave blank to keep)' : ''}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.currentTarget.value)}
+            />
+          </>
+        )}
+        {f.authType === 'oidcClientCredentials' && (
+          <>
+            <TextInput
+              label="Client ID"
+              description="Optional — many providers infer it from the secret"
+              value={f.oidcClientId ?? ''}
+              onChange={(e) => set({ oidcClientId: e.currentTarget.value })}
+            />
+            <PasswordInput
+              label="Client secret"
+              placeholder={editing?.hasApiKey ? '•••••••• (stored — leave blank to keep)' : ''}
+              value={apiKey}
+              onChange={(e) => setApiKey(e.currentTarget.value)}
+            />
+          </>
+        )}
+        {f.authType === 'oidcToken' && (
+          <PasswordInput
+            label="Access token"
+            description="A bearer token. It is not refreshed, so it expires with the token."
+            placeholder={editing?.hasApiKey ? '•••••••• (stored — leave blank to keep)' : ''}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.currentTarget.value)}
+          />
+        )}
+        {(f.authType === 'oidcPassword' || f.authType === 'oidcClientCredentials') && (
+          <TagsInput
+            label="Scopes (optional)"
+            description="Press Enter after each scope"
+            value={f.oidcScopes ?? []}
+            onChange={(v) => set({ oidcScopes: v })}
           />
         )}
 
@@ -217,6 +280,65 @@ export function ConnectionModal({ opened, onClose, onSaved, editing }: Props) {
           value={f.headersText ?? ''}
           onChange={(e) => set({ headersText: e.currentTarget.value })}
         />
+
+        <Accordion variant="separated" chevronPosition="left">
+          <Accordion.Item value="advanced">
+            <Accordion.Control>
+              <Text size="sm">Timeouts &amp; proxy</Text>
+            </Accordion.Control>
+            <Accordion.Panel>
+              <Stack gap="sm">
+                <Group grow>
+                  <NumberInput
+                    size="xs"
+                    label="Init (s)"
+                    placeholder="2"
+                    min={1}
+                    value={f.timeout?.init ?? ''}
+                    onChange={(v) =>
+                      set({ timeout: { ...f.timeout, init: v === '' ? undefined : Number(v) } })
+                    }
+                  />
+                  <NumberInput
+                    size="xs"
+                    label="Query (s)"
+                    placeholder="30"
+                    min={1}
+                    value={f.timeout?.query ?? ''}
+                    onChange={(v) =>
+                      set({ timeout: { ...f.timeout, query: v === '' ? undefined : Number(v) } })
+                    }
+                  />
+                  <NumberInput
+                    size="xs"
+                    label="Insert (s)"
+                    placeholder="90"
+                    min={1}
+                    value={f.timeout?.insert ?? ''}
+                    onChange={(v) =>
+                      set({ timeout: { ...f.timeout, insert: v === '' ? undefined : Number(v) } })
+                    }
+                  />
+                </Group>
+                <TextInput
+                  size="xs"
+                  label="gRPC proxy URL"
+                  description="Only tunnelling gRPC proxies are supported; for HTTP, point the host at the proxy instead."
+                  placeholder="http://proxy.internal:8080"
+                  value={f.proxies?.grpc ?? ''}
+                  onChange={(e) => set({ proxies: { grpc: e.currentTarget.value || undefined } })}
+                />
+                <Switch
+                  size="xs"
+                  label="Skip startup health checks"
+                  description="Connect faster against instances that don't expose /v1/meta readiness"
+                  checked={!!f.skipInitChecks}
+                  onChange={(e) => set({ skipInitChecks: e.currentTarget.checked })}
+                />
+              </Stack>
+            </Accordion.Panel>
+          </Accordion.Item>
+        </Accordion>
 
         <Group justify="flex-end" mt="sm">
           <Button variant="default" onClick={onClose}>Cancel</Button>

@@ -7,3 +7,8 @@ release/
 .vite/
 .eslintcache
 coverage/
+*.tsbuildinfo
+
+# Local AI-assistant settings — machine-specific tool permissions, not project config
+.claude/
+CLAUDE.md

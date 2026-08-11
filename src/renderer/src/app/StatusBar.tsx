@@ -1,9 +1,11 @@
-import { Group, Text, Box, Kbd } from '@mantine/core'
-import { IconTag } from '@tabler/icons-react'
+import { Group, Text, Box, Kbd, Tooltip } from '@mantine/core'
+import { IconLock, IconTag } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 import type { ConnectionConfig } from '@shared/types'
+import { describeUser, isReadOnly } from '@shared/permissions'
 import { api } from '../lib/api'
 import { connColor } from '../lib/colors'
+import { useCapabilities } from '../lib/useCapabilities'
 import { useApp } from '../store'
 
 function endpointLabel(cfg: ConnectionConfig): string {
@@ -31,6 +33,12 @@ export function StatusBar() {
     queryFn: () => api.schema.listCollections(activeConnectionId!),
     enabled: !!activeConnectionId && st === 'connected'
   })
+
+  // Surfaced only when the answer is unambiguous — a resolved snapshot holding
+  // no write permission at all. Anything less certain says nothing rather than
+  // implying a restriction that may not exist.
+  const capabilities = useCapabilities(st === 'connected' ? activeConnectionId : undefined)
+  const readOnly = isReadOnly(capabilities.data)
 
   const color = connColor(active?.color)
 
@@ -76,6 +84,17 @@ export function StatusBar() {
 
       {/* Right: cluster facts + palette hint */}
       <Group gap="md" px="sm" wrap="nowrap">
+        {readOnly && (
+          <Tooltip
+            withArrow
+            label={`Connected as ${describeUser(capabilities.data)} — this key holds no write permissions.`}
+          >
+            <Group gap={4} wrap="nowrap" c="yellow.6" style={{ cursor: 'default' }}>
+              <IconLock size={11} />
+              <Text c="yellow.6">read-only</Text>
+            </Group>
+          </Tooltip>
+        )}
         {collections.data && <Text c="dimmed">{collections.data.length} collections</Text>}
         {meta.data?.version && <Text c="dimmed">v{meta.data.version}</Text>}
         <Group gap={4} wrap="nowrap">

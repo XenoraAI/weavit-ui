@@ -1,5 +1,31 @@
 import { describe, it, expect } from 'vitest'
-import { parseQueryVector } from './query'
+import { metricKindFor, parseQueryVector } from './query'
+
+describe('metricKindFor', () => {
+  it('maps scalar types onto their aggregation family', () => {
+    expect(metricKindFor(['text'])).toBe('text')
+    expect(metricKindFor(['string'])).toBe('text')
+    expect(metricKindFor(['int'])).toBe('integer')
+    expect(metricKindFor(['number'])).toBe('number')
+    expect(metricKindFor(['boolean'])).toBe('boolean')
+    expect(metricKindFor(['date'])).toBe('date')
+  })
+
+  it('treats an array type the same as its element type', () => {
+    expect(metricKindFor(['text[]'])).toBe('text')
+    expect(metricKindFor(['int[]'])).toBe('integer')
+  })
+
+  it('returns undefined for types Weaviate cannot aggregate', () => {
+    expect(metricKindFor(['blob'])).toBeUndefined()
+    expect(metricKindFor(['geoCoordinates'])).toBeUndefined()
+    expect(metricKindFor(['phoneNumber'])).toBeUndefined()
+    expect(metricKindFor(['object'])).toBeUndefined()
+    // A capitalized type is a cross-reference.
+    expect(metricKindFor(['Author'])).toBeUndefined()
+    expect(metricKindFor([])).toBeUndefined()
+  })
+})
 
 describe('parseQueryVector', () => {
   it('parses a JSON array of numbers', () => {
