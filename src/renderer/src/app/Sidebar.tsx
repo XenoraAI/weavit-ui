@@ -21,7 +21,12 @@ import {
   IconPlugConnected,
   IconPlugConnectedX,
   IconDatabase,
-  IconSearch
+  IconSearch,
+  IconTag,
+  IconArchive,
+  IconShieldLock,
+  IconServer,
+  IconLayoutDashboard
 } from '@tabler/icons-react'
 import { useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -30,7 +35,7 @@ import { api } from '../lib/api'
 import { notifyErr } from '../lib/notify'
 import { useConnect } from '../lib/useConnect'
 import { connColor } from '../lib/colors'
-import { useApp } from '../store'
+import { useApp, type AdminView } from '../store'
 import { EditCollectionModal, type EditTab } from '../features/schema/EditCollectionModal'
 import { DeleteCollectionModal } from '../features/schema/DeleteCollectionModal'
 
@@ -47,12 +52,23 @@ const DOT: Record<string, string> = {
   error: 'red'
 }
 
+/** Instance-wide views — these sit above collections because they aren't
+ *  scoped to one. */
+const ADMIN_VIEWS: { value: AdminView; label: string; icon: typeof IconTag }[] = [
+  { value: 'overview', label: 'Overview', icon: IconLayoutDashboard },
+  { value: 'aliases', label: 'Aliases', icon: IconTag },
+  { value: 'backup', label: 'Backup', icon: IconArchive },
+  { value: 'rbac', label: 'Access control', icon: IconShieldLock },
+  { value: 'cluster', label: 'Cluster', icon: IconServer }
+]
+
 export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: Props) {
   const qc = useQueryClient()
-  const { activeConnectionId, status, selectedCollection } = useApp()
+  const { activeConnectionId, status, selectedCollection, adminView } = useApp()
   const setActiveConnection = useApp((s) => s.setActiveConnection)
   const setStatus = useApp((s) => s.setStatus)
   const selectCollection = useApp((s) => s.selectCollection)
+  const setAdminView = useApp((s) => s.setAdminView)
   const connect = useConnect()
   const [filter, setFilter] = useState('')
   const [editing, setEditing] = useState<{ name: string; tab: EditTab } | null>(null)
@@ -228,6 +244,39 @@ export function Sidebar({ onNewConnection, onEditConnection, onNewCollection }: 
           })}
         </Stack>
       </Box>
+
+      {/* Instance-wide views. Selecting one clears the collection selection,
+          since these aren't scoped to a collection. */}
+      {activeConnectionId && activeStatus === 'connected' && (
+        <Box px="xs" pt="xs">
+          <Text size="xs" fw={700} c="dimmed" tt="uppercase" mb={6}>
+            Instance
+          </Text>
+          <Stack gap={2}>
+            {ADMIN_VIEWS.map((view) => {
+              const isSel = !selectedCollection && adminView === view.value
+              const Icon = view.icon
+              return (
+                <UnstyledButton
+                  key={view.value}
+                  onClick={() => setAdminView(view.value)}
+                  style={{
+                    borderRadius: 8,
+                    padding: '5px 8px',
+                    borderLeft: `3px solid ${isSel ? activeColor : 'transparent'}`,
+                    background: isSel ? `${activeColor}18` : 'transparent'
+                  }}
+                >
+                  <Group gap={8} wrap="nowrap">
+                    <Icon size={15} style={{ color: isSel ? activeColor : undefined, opacity: 0.85 }} />
+                    <Text size="sm">{view.label}</Text>
+                  </Group>
+                </UnstyledButton>
+              )
+            })}
+          </Stack>
+        </Box>
+      )}
 
       {/* Collections — only while actually connected (or connecting), so a
           dropped/errored connection never shows stale collections. */}

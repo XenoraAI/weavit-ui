@@ -3,6 +3,11 @@ import { IconPlugConnectedX } from '@tabler/icons-react'
 import { useApp } from '../store'
 import { ConnectionOverview } from '../features/admin/ConnectionOverview'
 import { CollectionView } from '../features/schema/CollectionView'
+import { AliasPanel } from '../features/alias/AliasPanel'
+import { BackupPanel } from '../features/backup/BackupPanel'
+import { RbacPanel } from '../features/rbac/RbacPanel'
+import { ClusterPanel } from '../features/cluster/ClusterPanel'
+import { ErrorBoundary } from '../components/ErrorBoundary'
 import logo from '../assets/logo.png'
 
 function Welcome() {
@@ -26,7 +31,7 @@ function Welcome() {
 }
 
 export function MainArea() {
-  const { activeConnectionId, status, selectedCollection } = useApp()
+  const { activeConnectionId, status, selectedCollection, adminView } = useApp()
   const st = activeConnectionId ? status[activeConnectionId] : undefined
 
   if (!activeConnectionId) return <Welcome />
@@ -55,7 +60,18 @@ export function MainArea() {
     )
   }
 
-  if (!selectedCollection) return <ConnectionOverview connectionId={activeConnectionId} />
+  if (selectedCollection) {
+    return <CollectionView connectionId={activeConnectionId} collection={selectedCollection} />
+  }
 
-  return <CollectionView connectionId={activeConnectionId} collection={selectedCollection} />
+  // With no collection selected, the main area shows the instance-wide views.
+  return (
+    <ErrorBoundary resetKey={`${activeConnectionId}:${adminView}`}>
+      {adminView === 'aliases' && <AliasPanel connectionId={activeConnectionId} />}
+      {adminView === 'backup' && <BackupPanel connectionId={activeConnectionId} />}
+      {adminView === 'rbac' && <RbacPanel connectionId={activeConnectionId} />}
+      {adminView === 'cluster' && <ClusterPanel connectionId={activeConnectionId} />}
+      {adminView === 'overview' && <ConnectionOverview connectionId={activeConnectionId} />}
+    </ErrorBoundary>
+  )
 }

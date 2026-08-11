@@ -13,20 +13,31 @@ import {
   Loader,
   Alert,
   Tooltip,
-  Badge
+  Badge,
+  Menu,
+  MultiSelect,
+  UnstyledButton
 } from '@mantine/core'
 import {
   IconPlus,
   IconRefresh,
   IconChevronLeft,
   IconChevronRight,
-  IconAlertTriangle
+  IconAlertTriangle,
+  IconDownload,
+  IconUpload,
+  IconArrowUp,
+  IconArrowDown,
+  IconArrowsSort
 } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import type { WeaviateObject } from '@shared/types'
+import type { SortSpec, WeaviateObject } from '@shared/types'
 import { api } from '../../lib/api'
+import { notifyErr, notifyOk } from '../../lib/notify'
+import { downloadText, toCsv, toJsonl } from '../../lib/exportFile'
 import { ObjectDrawer } from './ObjectDrawer'
 import { InsertModal } from './InsertModal'
+import { ImportModal } from './ImportModal'
 
 interface Props {
   connectionId: string
@@ -36,6 +47,7 @@ interface Props {
 }
 
 const PAGE_SIZES = ['10', '25', '50', '100']
+const EXPORT_CAP = 10000
 
 function cellText(value: unknown): string {
   if (value === null || value === undefined) return ''
@@ -48,17 +60,59 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
   const [limit, setLimit] = useState(25)
   const [page, setPage] = useState(0)
   const [includeVector, setIncludeVector] = useState(false)
+  const [vectorNames, setVectorNames] = useState<string[]>([])
+  const [refProperties, setRefProperties] = useState<string[]>([])
+  const [sort, setSort] = useState<SortSpec[]>([])
   const [selected, setSelected] = useState<WeaviateObject | null>(null)
   const [insertOpen, setInsertOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const offset = page * limit
   const needsTenant = mtEnabled && !tenant
 
-  const objectsKey = ['objects', connectionId, collection, tenant, limit, offset, includeVector]
+  // Shares its cache entry with the collection header, so this costs nothing.
+  const config = useQuery({
+    queryKey: ['collection', connectionId, collection],
+    queryFn: () => api.schema.getCollection(connectionId, collection)
+  })
+  const references = config.data?.references ?? []
+  // The implicit 'default' space isn't selectable — there is nothing to choose.
+  const namedVectors = (config.data?.namedVectors ?? [])
+    .map((v) => v.name)
+    .filter((n) => n !== 'default')
+
+  // Weaviate resolves a cross-reference only when asked for it by name.
+  const returnReferences = refProperties.length
+    ? refProperties.map((property) => ({ property }))
+    : undefined
+
+  const objectsKey = [
+    'objects',
+    connectionId,
+    collection,
+    tenant,
+    limit,
+    offset,
+    includeVector,
+    vectorNames,
+    refProperties,
+    sort
+  ]
   const objects = useQuery({
     queryKey: objectsKey,
     queryFn: () =>
-      api.data.fetchObjects({ connectionId, collection, tenant, limit, offset, includeVector }),
+      api.data.fetchObjects({
+        connectionId,
+        collection,
+        tenant,
+        limit,
+        offset,
+        includeVector,
+        vectorNames: vectorNames.length ? vectorNames : undefined,
+        returnReferences,
+        sort: sort.length ? sort : undefined
+      }),
     enabled: !needsTenant
   })
 
@@ -72,6 +126,53 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['objects', connectionId, collection] })
   const total = objects.data?.totalCount
+
+  /** Click a header to cycle: unsorted → ascending → descending → unsorted. */
+  const cycleSort = (property: string) => {
+    setPage(0)
+    setSort((current) => {
+      const existing = current.find((s) => s.property === property)
+      if (!existing) return [{ property, direction: 'asc' }]
+      if (existing.direction === 'asc') return [{ property, direction: 'desc' }]
+      return []
+    })
+  }
+
+  const sortIcon = (property: string) => {
+    const s = sort.find((x) => x.property === property)
+    if (!s) return <IconArrowsSort size={12} style={{ opacity: 0.35 }} />
+    return s.direction === 'asc' ? <IconArrowUp size={12} /> : <IconArrowDown size={12} />
+  }
+
+  const exportAll = async (format: 'csv' | 'jsonl') => {
+    setExporting(true)
+    try {
+      const rows = await api.data.exportObjects({
+        connectionId,
+        collection,
+        tenant,
+        includeVector,
+        vectorNames: vectorNames.length ? vectorNames : undefined,
+        returnReferences,
+        limit: EXPORT_CAP
+      })
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+      if (format === 'csv') {
+        downloadText(`${collection}-${stamp}.csv`, toCsv(rows, includeVector), 'text/csv')
+      } else {
+        downloadText(`${collection}-${stamp}.jsonl`, toJsonl(rows), 'application/x-ndjson')
+      }
+      notifyOk(
+        rows.length >= EXPORT_CAP
+          ? `Exported the first ${EXPORT_CAP} objects (export cap)`
+          : `Exported ${rows.length} objects`
+      )
+    } catch (e) {
+      notifyErr(e, 'Export failed')
+    } finally {
+      setExporting(false)
+    }
+  }
 
   if (needsTenant) {
     return (
@@ -95,6 +196,31 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
           >
             Insert object
           </Button>
+          <Button
+            size="xs"
+            variant="light"
+            leftSection={<IconUpload size={15} />}
+            onClick={() => setImportOpen(true)}
+          >
+            Import
+          </Button>
+          <Menu position="bottom-start" withArrow>
+            <Menu.Target>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconDownload size={15} />}
+                loading={exporting}
+              >
+                Export
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>Up to {EXPORT_CAP.toLocaleString()} objects</Menu.Label>
+              <Menu.Item onClick={() => exportAll('csv')}>Download CSV</Menu.Item>
+              <Menu.Item onClick={() => exportAll('jsonl')}>Download JSONL</Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
           <Tooltip label="Refresh">
             <ActionIcon variant="light" onClick={refresh}>
               <IconRefresh size={16} />
@@ -106,6 +232,33 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
             checked={includeVector}
             onChange={(e) => setIncludeVector(e.currentTarget.checked)}
           />
+          {includeVector && namedVectors.length > 1 && (
+            <MultiSelect
+              size="xs"
+              w={200}
+              placeholder={vectorNames.length ? undefined : 'all vectors'}
+              title="Fetch only these named vectors"
+              data={namedVectors}
+              value={vectorNames}
+              onChange={setVectorNames}
+              clearable
+            />
+          )}
+          {references.length > 0 && (
+            <MultiSelect
+              size="xs"
+              w={220}
+              placeholder={refProperties.length ? undefined : 'resolve references…'}
+              title="Cross-references to resolve into each object, here and in exports"
+              data={references.map((r) => r.name)}
+              value={refProperties}
+              onChange={(v) => {
+                setPage(0)
+                setRefProperties(v)
+              }}
+              clearable
+            />
+          )}
         </Group>
 
         <Group gap="xs" wrap="nowrap">
@@ -113,6 +266,13 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
             <Badge variant="light" color="gray">
               {total} objects
             </Badge>
+          )}
+          {objects.data?.totalCountError && (
+            <Tooltip label={objects.data.totalCountError} multiline w={280}>
+              <Badge variant="light" color="yellow">
+                count unavailable
+              </Badge>
+            </Tooltip>
           )}
           <Select
             size="xs"
@@ -170,7 +330,12 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
                 <Table.Th style={{ minWidth: 130 }}>id</Table.Th>
                 {columns.map((c) => (
                   <Table.Th key={c} style={{ minWidth: 120 }}>
-                    {c}
+                    <UnstyledButton onClick={() => cycleSort(c)} style={{ fontSize: 'inherit' }}>
+                      <Group gap={4} wrap="nowrap">
+                        <span>{c}</span>
+                        {sortIcon(c)}
+                      </Group>
+                    </UnstyledButton>
                   </Table.Th>
                 ))}
               </Table.Tr>
@@ -224,6 +389,19 @@ export function DataBrowser({ connectionId, collection, tenant, mtEnabled }: Pro
           onInserted={() => {
             refresh()
             setInsertOpen(false)
+          }}
+        />
+      )}
+
+      {importOpen && (
+        <ImportModal
+          connectionId={connectionId}
+          collection={collection}
+          tenant={tenant}
+          onClose={() => setImportOpen(false)}
+          onImported={() => {
+            refresh()
+            setImportOpen(false)
           }}
         />
       )}

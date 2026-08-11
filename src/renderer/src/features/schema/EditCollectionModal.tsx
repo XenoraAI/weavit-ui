@@ -16,7 +16,8 @@ import {
   Loader,
   Center,
   Table,
-  ScrollArea
+  ScrollArea,
+  MultiSelect
 } from '@mantine/core'
 import { IconAlertTriangle, IconInfoCircle } from '@tabler/icons-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
@@ -28,7 +29,7 @@ import { EMPTY_SETTINGS, buildPatch, readSettings, type Settings } from './colle
 import { PropertyFields } from './PropertyFields'
 import { newPropertyDraft, toPropertyDefinition, type PropertyDraft } from './propertyDraft'
 
-export type EditTab = 'settings' | 'property' | 'advanced'
+export type EditTab = 'settings' | 'property' | 'reference' | 'vector' | 'advanced'
 
 interface Props {
   opened: boolean
@@ -57,9 +58,25 @@ export function EditCollectionModal({
 
   const [draft, setDraft] = useState<PropertyDraft>(newPropertyDraft())
 
+  // Reference draft
+  const [refName, setRefName] = useState('')
+  const [refTargets, setRefTargets] = useState<string[]>([])
+  const [refDescription, setRefDescription] = useState('')
+
+  // Named-vector draft
+  const [vecName, setVecName] = useState('')
+  const [vecVectorizer, setVecVectorizer] = useState<string | null>('none')
+  const [vecSourceProps, setVecSourceProps] = useState<string[]>([])
+
   const schema = useQuery({
     queryKey: ['collectionSchema', connectionId, collection],
     queryFn: () => api.schema.getCollectionSchema(connectionId, collection),
+    enabled: opened
+  })
+
+  const collections = useQuery({
+    queryKey: ['collections', connectionId],
+    queryFn: () => api.schema.listCollections(connectionId),
     enabled: opened
   })
 
@@ -140,6 +157,67 @@ export function EditCollectionModal({
     }
   }
 
+  const addReference = async () => {
+    const name = refName.trim()
+    if (!name || refTargets.length === 0) return
+    setBusy(true)
+    try {
+      // Single- and multi-target references take different shapes: one target
+      // collection versus a list of them.
+      const definition =
+        refTargets.length === 1
+          ? { name, targetCollection: refTargets[0], description: refDescription || undefined }
+          : { name, targetCollections: refTargets, description: refDescription || undefined }
+      await api.schema.addReference(connectionId, collection, definition)
+      notifyOk(`Added reference ${name}`)
+      setRefName('')
+      setRefTargets([])
+      setRefDescription('')
+      invalidate()
+    } catch (e) {
+      notifyErr(e, 'Add reference failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const addVector = async () => {
+    const name = vecName.trim()
+    if (!name) return
+    setBusy(true)
+    try {
+      const vectorizer = vecVectorizer ?? 'none'
+      await api.schema.addVector(connectionId, collection, {
+        [name]: {
+          vectorizer: {
+            name: vectorizer,
+            config:
+              vectorizer === 'none' || vecSourceProps.length === 0
+                ? {}
+                : { sourceProperties: vecSourceProps }
+          }
+        }
+      })
+      notifyOk(`Added named vector ${name}`)
+      setVecName('')
+      setVecSourceProps([])
+      invalidate()
+    } catch (e) {
+      notifyErr(e, 'Add named vector failed')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const otherCollections = (collections.data ?? [])
+    .map((c) => c.name)
+    .filter((n) => n !== collection)
+  const propertyNames = existingProps.map((p) => String(p?.name ?? '')).filter(Boolean)
+  const existingVectorNames = Object.keys(cls?.vectorConfig ?? {})
+  const vectorDuplicate = existingVectorNames.some(
+    (n) => n.toLowerCase() === vecName.trim().toLowerCase()
+  )
+
   return (
     <Modal opened={opened} onClose={onClose} title={`Edit ${collection}`} size="lg">
       {schema.isLoading ? (
@@ -155,6 +233,8 @@ export function EditCollectionModal({
           <Tabs.List mb="md">
             <Tabs.Tab value="settings">Settings</Tabs.Tab>
             <Tabs.Tab value="property">Add property</Tabs.Tab>
+            <Tabs.Tab value="reference">Add reference</Tabs.Tab>
+            <Tabs.Tab value="vector">Add vector</Tabs.Tab>
             <Tabs.Tab value="advanced">Advanced (JSON)</Tabs.Tab>
           </Tabs.List>
 
@@ -355,6 +435,111 @@ export function EditCollectionModal({
                   onClick={addProperty}
                 >
                   Add property
+                </Button>
+              </Group>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="reference">
+            <Stack>
+              <Alert color="gray" icon={<IconInfoCircle />} p="xs">
+                <Text size="xs">
+                  A reference property links objects here to objects in another collection. Pick more
+                  than one target to make it a multi-target reference — those need the target
+                  collection named on every read and write.
+                </Text>
+              </Alert>
+              <TextInput
+                label="Reference name"
+                placeholder="hasCategory"
+                value={refName}
+                onChange={(e) => setRefName(e.currentTarget.value)}
+              />
+              <MultiSelect
+                label="Target collections"
+                placeholder="Pick one or more"
+                searchable
+                data={otherCollections}
+                value={refTargets}
+                onChange={setRefTargets}
+              />
+              <TextInput
+                label="Description (optional)"
+                value={refDescription}
+                onChange={(e) => setRefDescription(e.currentTarget.value)}
+              />
+              <Group justify="flex-end" mt="sm">
+                <Button variant="default" onClick={onClose}>
+                  Close
+                </Button>
+                <Button
+                  loading={busy}
+                  disabled={!refName.trim() || refTargets.length === 0}
+                  onClick={addReference}
+                >
+                  Add reference
+                </Button>
+              </Group>
+            </Stack>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="vector">
+            <Stack>
+              <Alert color="yellow" icon={<IconAlertTriangle />} p="xs">
+                <Text size="xs">
+                  Named vectors can only be added to a collection that already uses them. Existing
+                  vector spaces are immutable, and adding one does not vectorize existing objects —
+                  they need to be rewritten to gain the new embedding.
+                </Text>
+              </Alert>
+              {existingVectorNames.length > 0 && (
+                <Text size="xs" c="dimmed">
+                  Existing: {existingVectorNames.join(', ')}
+                </Text>
+              )}
+              <TextInput
+                label="Vector name"
+                placeholder="title_embedding"
+                value={vecName}
+                error={vectorDuplicate ? 'A vector with this name already exists' : undefined}
+                onChange={(e) => setVecName(e.currentTarget.value)}
+              />
+              <Select
+                label="Vectorizer"
+                description="'none' means you supply the vector yourself on every write"
+                data={[
+                  'none',
+                  'text2vec-openai',
+                  'text2vec-cohere',
+                  'text2vec-huggingface',
+                  'text2vec-ollama',
+                  'text2vec-transformers',
+                  'text2vec-google',
+                  'text2vec-weaviate'
+                ]}
+                value={vecVectorizer}
+                onChange={setVecVectorizer}
+              />
+              <MultiSelect
+                label="Source properties"
+                description="Which properties get embedded. Empty means all of them."
+                data={propertyNames}
+                value={vecSourceProps}
+                onChange={setVecSourceProps}
+                searchable
+                clearable
+                disabled={vecVectorizer === 'none'}
+              />
+              <Group justify="flex-end" mt="sm">
+                <Button variant="default" onClick={onClose}>
+                  Close
+                </Button>
+                <Button
+                  loading={busy}
+                  disabled={!vecName.trim() || vectorDuplicate}
+                  onClick={addVector}
+                >
+                  Add named vector
                 </Button>
               </Group>
             </Stack>

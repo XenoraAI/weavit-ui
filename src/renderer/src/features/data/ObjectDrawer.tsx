@@ -23,11 +23,14 @@ import {
   IconX,
   IconCopy,
   IconCheck,
-  IconAlertTriangle
+  IconAlertTriangle,
+  IconVectorTriangle,
+  IconDownload
 } from '@tabler/icons-react'
 import type { WeaviateObject } from '@shared/types'
 import { api } from '../../lib/api'
 import { notifyErr, notifyOk } from '../../lib/notify'
+import { downloadText } from '../../lib/exportFile'
 import { JsonView } from '../../components/JsonView'
 import { VectorView } from '../../components/VectorView'
 import { CodeEditor } from '../../components/CodeEditor'
@@ -39,6 +42,8 @@ interface Props {
   object: WeaviateObject
   onClose: () => void
   onChanged: () => void
+  /** Offered when the host panel can run a nearObject search from this row. */
+  onFindSimilar?: (uuid: string) => void
 }
 
 function valueText(v: unknown): string {
@@ -47,7 +52,15 @@ function valueText(v: unknown): string {
   return String(v)
 }
 
-export function ObjectDrawer({ connectionId, collection, tenant, object, onClose, onChanged }: Props) {
+export function ObjectDrawer({
+  connectionId,
+  collection,
+  tenant,
+  object,
+  onClose,
+  onChanged,
+  onFindSimilar
+}: Props) {
   const [editing, setEditing] = useState(false)
   const [propsText, setPropsText] = useState('')
   const [merge, setMerge] = useState(true)
@@ -115,6 +128,17 @@ export function ObjectDrawer({ connectionId, collection, tenant, object, onClose
             <Button size="xs" variant="light" leftSection={<IconEdit size={14} />} onClick={startEdit}>
               Edit
             </Button>
+            {onFindSimilar && (
+              <Button
+                size="xs"
+                variant="light"
+                color="aqua"
+                leftSection={<IconVectorTriangle size={14} />}
+                onClick={() => onFindSimilar(object.uuid)}
+              >
+                Find similar
+              </Button>
+            )}
             <Button
               size="xs"
               variant="light"
@@ -167,6 +191,7 @@ export function ObjectDrawer({ connectionId, collection, tenant, object, onClose
             <Tabs.Tab value="structured">Properties</Tabs.Tab>
             <Tabs.Tab value="json">JSON</Tabs.Tab>
             <Tabs.Tab value="vectors">Vectors</Tabs.Tab>
+            <Tabs.Tab value="references">References</Tabs.Tab>
             <Tabs.Tab value="metadata">Metadata</Tabs.Tab>
           </Tabs.List>
 
@@ -193,10 +218,47 @@ export function ObjectDrawer({ connectionId, collection, tenant, object, onClose
 
           <Tabs.Panel value="json">
             <JsonView value={{ uuid: object.uuid, properties: object.properties }} maxHeight={520} />
+            <Group justify="flex-end" mt="xs">
+              <Button
+                size="compact-xs"
+                variant="light"
+                leftSection={<IconDownload size={13} />}
+                onClick={() =>
+                  downloadText(
+                    `${collection}-${object.uuid}.json`,
+                    JSON.stringify(
+                      {
+                        uuid: object.uuid,
+                        properties: object.properties,
+                        vectors: object.vectors,
+                        references: object.references,
+                        metadata: object.metadata
+                      },
+                      null,
+                      2
+                    ),
+                    'application/json'
+                  )
+                }
+              >
+                Download JSON
+              </Button>
+            </Group>
           </Tabs.Panel>
 
           <Tabs.Panel value="vectors">
             <VectorView vectors={object.vectors} />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="references">
+            {object.references && Object.keys(object.references).length > 0 ? (
+              <JsonView value={object.references} maxHeight={520} />
+            ) : (
+              <Text c="dimmed" size="sm">
+                No references returned. Request them under “Return references” in the query panel —
+                Weaviate does not resolve cross-references unless asked.
+              </Text>
+            )}
           </Tabs.Panel>
 
           <Tabs.Panel value="metadata">

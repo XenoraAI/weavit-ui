@@ -1,7 +1,8 @@
 import { app, safeStorage } from 'electron'
+import { randomUUID } from 'node:crypto'
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type { ConnectionConfig } from '@shared/types'
+import type { ConnectionConfig, HistoryEntry, SavedQuery } from '@shared/types'
 
 // Simple JSON-file persistence living in the OS userData dir. Connection
 // profiles (non-secret) are stored as plain JSON; API keys are encrypted with
@@ -15,6 +16,8 @@ function dataDir(): string {
 
 const connectionsFile = () => join(dataDir(), 'weft-connections.json')
 const secretsFile = () => join(dataDir(), 'weft-secrets.json')
+const historyFile = () => join(dataDir(), 'weft-history.json')
+const savedQueriesFile = () => join(dataDir(), 'weft-saved-queries.json')
 
 // The userData folder is derived from the app name, so renaming the app moves
 // it and would appear to lose saved connections. If the current folder has no
@@ -117,4 +120,57 @@ export function deleteSecret(connectionId: string): void {
   const map = loadSecrets()
   delete map[connectionId]
   persistSecrets(map)
+}
+
+// ── Query history ───────────────────────────────────────────────────────────
+
+/** Keep recent history bounded — it is a convenience, not an audit log. */
+const HISTORY_LIMIT = 200
+
+export function loadHistory(connectionId: string, collection?: string): HistoryEntry[] {
+  return readJson<HistoryEntry[]>(historyFile(), []).filter(
+    (h) => h.connectionId === connectionId && (!collection || h.collection === collection)
+  )
+}
+
+export function recordHistory(entry: Omit<HistoryEntry, 'id' | 'at'>): HistoryEntry {
+  const all = readJson<HistoryEntry[]>(historyFile(), [])
+  const full: HistoryEntry = { ...entry, id: randomUUID(), at: new Date().toISOString() }
+  // Newest first, and capped so the file can't grow without bound.
+  writeJson(historyFile(), [full, ...all].slice(0, HISTORY_LIMIT))
+  return full
+}
+
+/** Clears one connection's history, or everything when no id is given. */
+export function clearHistory(connectionId?: string): void {
+  if (!connectionId) {
+    writeJson(historyFile(), [])
+    return
+  }
+  const remaining = readJson<HistoryEntry[]>(historyFile(), []).filter(
+    (h) => h.connectionId !== connectionId
+  )
+  writeJson(historyFile(), remaining)
+}
+
+// ── Saved queries ───────────────────────────────────────────────────────────
+
+export function loadSavedQueries(): SavedQuery[] {
+  return readJson<SavedQuery[]>(savedQueriesFile(), [])
+}
+
+export function saveQuery(query: Omit<SavedQuery, 'id' | 'savedAt'>): SavedQuery {
+  const all = loadSavedQueries()
+  const full: SavedQuery = { ...query, id: randomUUID(), savedAt: new Date().toISOString() }
+  // A repeat name replaces the older entry rather than accumulating duplicates.
+  const remaining = all.filter((q) => !(q.name === query.name && q.collection === query.collection))
+  writeJson(savedQueriesFile(), [full, ...remaining])
+  return full
+}
+
+export function deleteSavedQuery(id: string): void {
+  writeJson(
+    savedQueriesFile(),
+    loadSavedQueries().filter((q) => q.id !== id)
+  )
 }

@@ -13,6 +13,11 @@ hand.
    download heading, the installer table and its JavaScript, and the status bar. Bump
    `<lastmod>` in [`docs/sitemap.xml`](./docs/sitemap.xml) too.
 
+   If the release adds features, the copy that describes them lives in three more places:
+   the feature list in [`README.md`](./README.md), the feature cards and FAQ in
+   `docs/index.html`, and the JSON-LD `description`. Update the example version in the
+   [bug report template](./.github/ISSUE_TEMPLATE/bug_report.yml) while you're there.
+
 2. **Merge it to `main`.** That's the whole trigger. On the merge, the
    [`Release` workflow](./.github/workflows/release.yml) sees that no `v<version>` tag exists
    yet, creates and pushes it, and starts the build. Merges that don't change the version are
@@ -22,8 +27,8 @@ hand.
    as before and skips the auto-tag step:
 
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag v1.2.0
+   git push origin v1.2.0
    ```
 
 3. **CI builds everything.** The workflow fans out

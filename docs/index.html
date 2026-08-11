@@ -37,11 +37,11 @@
       "@type": "SoftwareApplication",
       "name": "Weavit UI",
       "alternateName": ["Weaviate GUI", "Weaviate Explorer", "Weaviate UI"],
-      "description": "A free, open-source cross-platform desktop GUI for the Weaviate vector database. Browse collections, create and edit schema, view and edit objects, inspect named vectors, and run vector, keyword (BM25) and hybrid searches against any Weaviate instance.",
+      "description": "A free, open-source cross-platform desktop GUI for the Weaviate vector database. Browse collections, create and edit schema, view and edit objects, inspect named vectors, and run vector, keyword (BM25) and hybrid searches against any Weaviate instance — plus multi-tenancy, backup and restore, aliases, cluster and replication, and role-based access control.",
       "applicationCategory": "DeveloperApplication",
       "applicationSubCategory": "Database client",
       "operatingSystem": "macOS, Windows, Linux",
-      "softwareVersion": "1.0.1",
+      "softwareVersion": "1.2.0",
       "url": "https://xenoraai.github.io/weavit-ui/",
       "downloadUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
       "installUrl": "https://github.com/XenoraAI/weavit-ui/releases/latest",
@@ -86,10 +86,18 @@
         },
         {
           "@type": "Question",
+          "name": "Can I manage Weaviate users and roles from a GUI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Weavit UI has an access-control screen for instances with RBAC enabled: build a role from Weaviate's permission model, grant it to database users or OIDC groups, and create users, issue and rotate their API keys, or deactivate them. It also reads the permissions of the key you are connected with, so a read-only connection is labelled as such and a refusal names the permission you were missing."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Does Weavit UI work with Weaviate Cloud?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes. Weavit UI supports local instances, Weaviate Cloud, and fully custom setups with separate HTTP and gRPC hosts and ports. Authentication can be an API key or anonymous, and you can add extra HTTP headers for third-party vectorizer keys such as OpenAI or Cohere."
+            "text": "Yes. Weavit UI supports local instances, Weaviate Cloud, and fully custom setups with separate HTTP and gRPC hosts and ports. Authentication can be anonymous, an API key, or OIDC (resource-owner password, client credentials, or a bearer token), and you can add extra HTTP headers for third-party vectorizer keys such as OpenAI or Cohere."
           }
         },
         {
@@ -447,7 +455,7 @@ figure{margin:0}
   <div class="wrap hero-grid">
 
     <div>
-      <p class="eyebrow"><span class="on">●</span> weavit ui · v1.0.1 · apache-2.0</p>
+      <p class="eyebrow"><span class="on">●</span> weavit ui · v1.2.0 · apache-2.0</p>
 
       <h1>Weaviate GUI
         <span class="qual">A desktop client for the Weaviate vector database — macOS, Windows and Linux.</span>
@@ -456,7 +464,8 @@ figure{margin:0}
       <p class="intro">Weavit UI connects to <strong>any Weaviate instance</strong> — local Docker,
       self-hosted, or Weaviate Cloud — and gives you a real interface for it. Browse collections,
       read and edit objects, inspect named vectors, and run vector, keyword and hybrid searches
-      without hand-writing GraphQL.</p>
+      without hand-writing GraphQL — then run the instance itself: tenants, backups, aliases,
+      users and roles.</p>
 
       <div class="dl">
         <a class="btn" id="dl-main" href="https://github.com/XenoraAI/weavit-ui/releases/latest">
@@ -557,8 +566,9 @@ figure{margin:0}
       <p class="eyebrow">Features</p>
       <h2 class="h2">A full Weaviate client, not a viewer</h2>
       <p class="lede">Read and write. Weavit UI covers the day-to-day work of running a vector
-      database: inspecting what got ingested, fixing a bad object, and checking that a search
-      actually returns what you expect.</p>
+      database: inspecting what got ingested, fixing a bad object, checking that a search actually
+      returns what you expect — and the operations around it, from backups and tenants to who is
+      allowed to do any of it.</p>
     </div>
 
     <div class="feats">
@@ -566,8 +576,8 @@ figure{margin:0}
         <span class="tag">connections</span>
         <h3>Connect to anything</h3>
         <p>Local, Weaviate Cloud, or custom hosts with independent HTTP and gRPC endpoints.
-        API-key or anonymous auth, plus extra headers for third-party vectorizer keys. Credentials
-        are encrypted with your OS keychain.</p>
+        Anonymous, API-key or OIDC auth, plus extra headers for third-party vectorizer keys.
+        Credentials are encrypted with your OS keychain.</p>
       </div>
 
       <div class="feat">
@@ -582,23 +592,41 @@ figure{margin:0}
         <span class="tag">data</span>
         <h3>Read and edit objects</h3>
         <p>A paginated object browser with structured and raw-JSON views, named vector display,
-        and a tenant selector. Insert new objects, patch existing ones by merge or replace, and
-        delete.</p>
+        sortable columns and a tenant selector. Insert new objects, patch existing ones by merge
+        or replace, and delete. Bulk-import from JSON, NDJSON or CSV, and export back out.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">operations</span>
+        <h3>Run the instance, not just the data</h3>
+        <p>Backups you can create, watch, cancel and restore per collection. Aliases you can
+        repoint. Tenants you can create and move between active, inactive and offloaded. Shards,
+        nodes and replica movement, with a live replication queue.</p>
+      </div>
+
+      <div class="feat">
+        <span class="tag">access control</span>
+        <h3>Roles and users, without curl</h3>
+        <p>Build a role from Weaviate's permission model, grant it to database users or OIDC
+        groups, and issue or rotate API keys. Connections whose key is read-only say so, and a
+        refusal tells you which permission was missing instead of printing a raw 403.</p>
       </div>
 
       <div class="feat">
         <span class="tag">query</span>
         <h3>Search every way Weaviate can</h3>
-        <p>nearText, nearVector, BM25 keyword, and hybrid search — with a visual filter builder,
-        target-vector selection, and property projection. Tune a query and see results
-        immediately.</p>
+        <p>nearText, nearVector, nearObject, nearImage, nearMedia, BM25 keyword and hybrid — with
+        a visual filter builder, target-vector selection, property projection, autocut, group-by
+        and reranking. Generative search runs in its own tab, and every query is kept in a
+        re-runnable history.</p>
       </div>
 
       <div class="feat">
         <span class="tag">admin</span>
         <h3>Inspect the cluster</h3>
-        <p>Cluster metadata, installed modules, and per-node status. When you need to drop to the
-        wire, the built-in GraphQL and REST console sends raw requests to the same connection.</p>
+        <p>Cluster metadata, installed modules, per-node status and a tokenizer preview. When you
+        need to drop to the wire, the built-in GraphQL and REST consoles send raw requests to the
+        same connection.</p>
       </div>
 
       <div class="feat">
@@ -616,7 +644,7 @@ figure{margin:0}
   <div class="wrap">
     <div class="band-head">
       <p class="eyebrow">Download</p>
-      <h2 class="h2">Get Weavit UI 1.0.1</h2>
+      <h2 class="h2">Get Weavit UI 1.2.0</h2>
       <p class="lede">Free and open source under Apache-2.0. Pick your platform, or browse every
       asset on the <a href="https://github.com/XenoraAI/weavit-ui/releases/latest">GitHub releases
       page</a>.</p>
@@ -630,28 +658,28 @@ figure{margin:0}
       <tbody>
         <tr id="p-mac-arm">
           <td>macOS — Apple Silicon</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-arm64.dmg">Download .dmg</a></td>
-          <td class="file col-file">Weavit-UI-1.0.1-arm64.dmg</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/Weavit-UI-1.2.0-arm64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-1.2.0-arm64.dmg</td>
         </tr>
         <tr id="p-mac-x64">
           <td>macOS — Intel</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-x64.dmg">Download .dmg</a></td>
-          <td class="file col-file">Weavit-UI-1.0.1-x64.dmg</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/Weavit-UI-1.2.0-x64.dmg">Download .dmg</a></td>
+          <td class="file col-file">Weavit-UI-1.2.0-x64.dmg</td>
         </tr>
         <tr id="p-win">
           <td>Windows — x64</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-setup.exe">Download installer</a></td>
-          <td class="file col-file">Weavit-UI-1.0.1-setup.exe</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/Weavit-UI-1.2.0-setup.exe">Download installer</a></td>
+          <td class="file col-file">Weavit-UI-1.2.0-setup.exe</td>
         </tr>
         <tr id="p-linux">
           <td>Linux — portable</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-x86_64.AppImage">Download AppImage</a></td>
-          <td class="file col-file">Weavit-UI-1.0.1-x86_64.AppImage</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/Weavit-UI-1.2.0-x86_64.AppImage">Download AppImage</a></td>
+          <td class="file col-file">Weavit-UI-1.2.0-x86_64.AppImage</td>
         </tr>
         <tr id="p-deb">
           <td>Linux — Debian / Ubuntu</td>
-          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/Weavit-UI-1.0.1-amd64.deb">Download .deb</a></td>
-          <td class="file col-file">Weavit-UI-1.0.1-amd64.deb</td>
+          <td><a href="https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/Weavit-UI-1.2.0-amd64.deb">Download .deb</a></td>
+          <td class="file col-file">Weavit-UI-1.2.0-amd64.deb</td>
         </tr>
       </tbody>
     </table>
@@ -719,10 +747,19 @@ figure{margin:0}
       </div>
 
       <div>
+        <h3>Can I manage users and roles?</h3>
+        <p>On instances with RBAC enabled, yes. Build a role from Weaviate's permission model,
+        grant it to database users or OIDC groups, and create users, rotate their API keys, or
+        deactivate them. The app also reads the permissions of the key you connect with, so a
+        read-only connection is labelled as one.</p>
+      </div>
+
+      <div>
         <h3>Does it work with Weaviate Cloud?</h3>
         <p>Yes. Local instances, Weaviate Cloud, and fully custom setups with separate HTTP and
-        gRPC hosts and ports all work. Authenticate with an API key or anonymously, and add extra
-        HTTP headers when your vectorizer needs a third-party key such as OpenAI or Cohere.</p>
+        gRPC hosts and ports all work. Authenticate anonymously, with an API key, or over OIDC
+        (password, client credentials or bearer token), and add extra HTTP headers when your
+        vectorizer needs a third-party key such as OpenAI or Cohere.</p>
       </div>
 
       <div>
@@ -778,7 +815,7 @@ figure{margin:0}
 
 <div class="statusbar">
   <span class="sb-you" id="sb-you"><span class="dot"></span> weavit-ui</span>
-  <span class="sb-mid">v1.0.1</span>
+  <span class="sb-mid">v1.2.0</span>
   <span class="sb-sp"></span>
   <span class="sb-mid">apache-2.0</span>
   <a href="https://github.com/XenoraAI/weavit-ui">github</a>
@@ -788,7 +825,7 @@ figure{margin:0}
 /* Progressive enhancement only: the page is complete and the download button already
    works with JavaScript disabled. This just points it at the right installer. */
 (function () {
-  var BASE = 'https://github.com/XenoraAI/weavit-ui/releases/download/v1.0.1/';
+  var BASE = 'https://github.com/XenoraAI/weavit-ui/releases/download/v1.2.0/';
   var ua = navigator.userAgent || '';
   var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
   var s = (plat + ' ' + ua).toLowerCase();
@@ -799,16 +836,16 @@ figure{margin:0}
     // Arch isn't reliably detectable from the browser, so default to Apple Silicon
     // (every Mac since 2020) and surface the Intel build right next to it.
     target = {
-      file: 'Weavit-UI-1.0.1-arm64.dmg',
+      file: 'Weavit-UI-1.2.0-arm64.dmg',
       label: 'Download for macOS',
       sub: 'Apple Silicon · .dmg',
       row: 'p-mac-arm',
       status: 'macos · apple silicon',
-      alt: '<a href="' + BASE + 'Weavit-UI-1.0.1-x64.dmg">On an Intel Mac?</a> · <a href="#download">All platforms</a>'
+      alt: '<a href="' + BASE + 'Weavit-UI-1.2.0-x64.dmg">On an Intel Mac?</a> · <a href="#download">All platforms</a>'
     };
   } else if (/win/.test(s)) {
     target = {
-      file: 'Weavit-UI-1.0.1-setup.exe',
+      file: 'Weavit-UI-1.2.0-setup.exe',
       label: 'Download for Windows',
       sub: 'x64 · installer',
       row: 'p-win',
@@ -817,12 +854,12 @@ figure{margin:0}
     };
   } else if (/linux|x11|cros/.test(s) && !/android/.test(s)) {
     target = {
-      file: 'Weavit-UI-1.0.1-x86_64.AppImage',
+      file: 'Weavit-UI-1.2.0-x86_64.AppImage',
       label: 'Download for Linux',
       sub: 'x86_64 · AppImage',
       row: 'p-linux',
       status: 'linux · x86_64',
-      alt: '<a href="' + BASE + 'Weavit-UI-1.0.1-amd64.deb">Debian / Ubuntu .deb</a> · <a href="#download">All platforms</a>'
+      alt: '<a href="' + BASE + 'Weavit-UI-1.2.0-amd64.deb">Debian / Ubuntu .deb</a> · <a href="#download">All platforms</a>'
     };
   }
 
